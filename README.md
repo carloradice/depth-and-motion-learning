@@ -1,4 +1,4 @@
-Fork from https://github.com/CarloRadice/google-research/tree/master/depth_and_motion_learning
+Forked from https://github.com/google-research/google-research/tree/master/depth_and_motion_learning .
 
 # Unsupervised Monocular Depth and Motion Learning
 
