@@ -23,30 +23,17 @@ import numpy as np
 import cv2
 import os, glob
 
-
-import argparse
+import alignment
+from alignment import compute_overlap
+from alignment import align
 
 
 SEQ_LENGTH = 3
 WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
-# INPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_FULL/kitti-raw-uncompressed'
-# OUTPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_procesed/'
-INPUT_DIR = '/media/RAIDONE/radice'
-OUTPUT_DIR = '/media/RAIDONE/radice/STRUCT2DEPTH'
-OXFORD_CALIB = '/media/RAIDONE/radice/OXFORD/calib_cam_to_cam.txt'
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='Data generator for depth-and-motion-learning')
-    parser.add_argument('--folder', type=str,
-                        help='folder containing files',
-                        required=True)
-    parser.add_argument('--dataset', type=str,
-                        help='dataset',
-                        choices=['KITTI', 'OXFORD'])
-    return parser.parse_args()
+INPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_FULL/kitti-raw-uncompressed'
+OUTPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_procesed/'
 
 
 def get_line(file, start):
@@ -96,32 +83,33 @@ def crop(img, segimg, fx, fy, cx, cy):
     return c, cseg, fx, fy, cx, cy
 
 
-def run_all(args):
-    folder = args.folder
-    dataset = args.dataset
-    ct = 0
-    if dataset == 'OXFORD':
-        input_path = os.path.join(INPUT_DIR, dataset, folder)
-        print('-> Processing', input_path)
-        output_path = os.path.join(OUTPUT_DIR, dataset, folder)
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
+def run_all():
+  ct = 0
+if not OUTPUT_DIR.endswith('/'):
+    OUTPUT_DIR = OUTPUT_DIR + '/'
 
-        # oxford calib matrix
-        calib_camera = np.array([[983.044006, 0.0, 643.646973],
-                             [0.0, 983.044006, 493.378998],
-                             [0.0, 0.0, 1.0]])
+for d in glob.glob(INPUT_DIR + '/*/'):
+    date = d.split('/')[-2]
+    file_calibration = d + 'calib_cam_to_cam.txt'
+    calib_raw = [get_line(file_calibration, 'P_rect_02'), get_line(file_calibration, 'P_rect_03')]
 
-        for subfolder in ['processed/stereo/left', 'processed/stereo/right']:
+    for d2 in glob.glob(d + '*/'):
+        seqname = d2.split('/')[-2]
+        print('Processing sequence', seqname)
+        for subfolder in ['image_02/data', 'image_03/data']:
             ct = 1
-            # conversione in jpg
-            files_path = os.path.join(input_path, subfolder)
-            files = glob.glob(files_path + '/*.jpg')
+            seqname = d2.split('/')[-2] + subfolder.replace('image', '').replace('/data', '')
+            if not os.path.exists(OUTPUT_DIR + seqname):
+                os.mkdir(OUTPUT_DIR + seqname)
+
+            calib_camera = calib_raw[0] if subfolder=='image_02/data' else calib_raw[1]
+            folder = d2 + subfolder
+            files = glob.glob(folder + '/*.png')
             files = [file for file in files if not 'disp' in file and not 'flip' in file and not 'seg' in file]
             files = sorted(files)
             for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
                 imgnum = str(ct).zfill(10)
-                if os.path.exists(output_path + '/' + imgnum + '.png'):
+                if os.path.exists(OUTPUT_DIR + seqname + '/' + imgnum + '.png'):
                     ct+=1
                     continue
                 big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
@@ -131,8 +119,8 @@ def run_all(args):
                     img = cv2.imread(files[j])
                     ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
 
-                    zoom_x = WIDTH / ORIGINAL_WIDTH
-                    zoom_y = HEIGHT / ORIGINAL_HEIGHT
+                    zoom_x = WIDTH/ORIGINAL_WIDTH
+                    zoom_y = HEIGHT/ORIGINAL_HEIGHT
 
                     # Adjust intrinsics.
                     calib_current = calib_camera.copy()
@@ -142,22 +130,19 @@ def run_all(args):
                     calib_current[1, 2] *= zoom_y
 
                     calib_representation = ','.join([str(c) for c in calib_current.flatten()])
+
                     img = cv2.resize(img, (WIDTH, HEIGHT))
                     big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
                     wct+=1
-                cv2.imwrite(output_path + '/' + imgnum + '.png', big_img)
-                f = open(output_path + '/' + imgnum + '_cam.txt', 'w')
+                cv2.imwrite(OUTPUT_DIR + seqname + '/' + imgnum + '.png', big_img)
+                f = open(OUTPUT_DIR + seqname + '/' + imgnum + '_cam.txt', 'w')
                 f.write(calib_representation)
                 f.close()
                 ct+=1
 
-    print('-> DONE')
-
-
-def main(args):
-    run_all(args)
+def main(_):
+  run_all()
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    app.run(main(args))
+  app.run(main)
