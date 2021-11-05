@@ -100,10 +100,10 @@ def run_all(args):
                 img = cv2.imread(files[j])
                 if subfolder == 'processed/stereo/left':
                     seg_path = os.path.join(SEG_DIR, dataset, folder, 'masks', 'left',
-                                            os.path.basename(files[j]).replace('.png', '-seg.png'))
+                                            os.path.basename(files[j]).replace('.jpg', '-fseg.png'))
                 else:
                     seg_path = os.path.join(SEG_DIR, dataset, folder, 'masks', 'right',
-                                            os.path.basename(files[j]).replace('.png', '-seg.png'))
+                                            os.path.basename(files[j]).replace('.jpg', '-fseg.png'))
 
                 segimg = cv2.imread(seg_path)
 

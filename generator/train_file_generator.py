@@ -40,15 +40,18 @@ def generator(args):
         if not os.path.isdir(output_path):
             os.makedirs(output_path)
 
-        files = glob.glob(input_path + '/*.png')
+        # HARD CODED
+        path = os.path.join(input_path, 'left')
+        files = glob.glob(path + '/*[0-9].png')
+        print(files)
         files = sorted(files)
 
         names = []
         for index, f in enumerate(files):
             if index == len(files)-1:
-                names.append(input_path + ' ' + os.path.basename(f).split('.')[0])
+                names.append(path + ' ' + os.path.basename(f).split('.')[0])
             else:
-                names.append(input_path + ' ' + os.path.basename(f).split('.')[0] + '\n')
+                names.append(path + ' ' + os.path.basename(f).split('.')[0] + '\n')
 
         train_path = os.path.join(output_path, '{}.{}'.format('train', 'txt'))
         write_txt(names, train_path)
