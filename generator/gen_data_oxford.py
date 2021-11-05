@@ -20,6 +20,7 @@ CROP_AREA = [0, 360, 1280, 730]
 INPUT_DIR = '/media/RAIDONE/radice'
 OUTPUT_DIR = '/media/RAIDONE/radice/STRUCT2DEPTH'
 OXFORD_CALIB = '/media/RAIDONE/radice/OXFORD/calib_cam_to_cam.txt'
+SEG_DIR = '/media/RAIDONE/radice/STRUCT2DEPTH'
 
 
 def parse_args():
@@ -59,6 +60,10 @@ def run_all(args):
     output_path = os.path.join(OUTPUT_DIR, dataset, folder)
     if not os.path.exists(output_path):
         os.mkdir(output_path)
+        left = os.path.join(output_path, 'left')
+        os.mkdir(left)
+        right = os.path.join(output_path, 'right')
+        os.mkdir(right)
 
     # oxford calib matrix
     fx = 983.044006
@@ -74,7 +79,6 @@ def run_all(args):
     #                           [0.0, fy, crop_cy],
     #                           [0.0, 0.0, 1.0]])
 
-
     for subfolder in ['processed/stereo/left', 'processed/stereo/right']:
         ct = 1
         # conversione in jpg
@@ -84,14 +88,25 @@ def run_all(args):
         files = sorted(files)
         for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
             imgnum = str(ct).zfill(10)
+
             # if os.path.exists(output_path + '/' + imgnum + '.png'):
             #     ct+=1
             #     continue
             big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
+            big_seg_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
             wct = 0
 
             for j in range(i-SEQ_LENGTH, i):  # Collect frames for this sample.
                 img = cv2.imread(files[j])
+                if subfolder == 'processed/stereo/left':
+                    seg_path = os.path.join(SEG_DIR, dataset, folder, 'masks', 'left',
+                                            os.path.basename(files[j]).replace('.png', '-seg.png'))
+                else:
+                    seg_path = os.path.join(SEG_DIR, dataset, folder, 'masks', 'right',
+                                            os.path.basename(files[j]).replace('.png', '-seg.png'))
+
+                segimg = cv2.imread(seg_path)
+
                 ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
 
                 img = img[CROP_AREA[1]:CROP_AREA[3], :, :]
@@ -116,10 +131,23 @@ def run_all(args):
 
                 calib_representation = ','.join([str(c) for c in calib_current.flatten()])
                 img = cv2.resize(img, (WIDTH, HEIGHT))
+                segimg = cv2.resize(segimg, (WIDTH, HEIGHT))
                 big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
+                big_seg_img[:,wct*WIDTH:(wct+1)*WIDTH] = segimg
                 wct+=1
-            cv2.imwrite(output_path + '/' + imgnum + '.png', big_img)
-            f = open(output_path + '/' + imgnum + '_cam.txt', 'w')
+
+            if subfolder == 'processed/stereo/left':
+                big_img_path = os.path.join(output_path, 'left', '{}.{}'.format(imgnum, 'png'))
+                txt_path = os.path.join(output_path, 'left', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
+                big_seg_img_path = os.path.join(output_path, 'left', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
+            else:
+                big_img_path = os.path.join(output_path, 'right', '{}.{}'.format(imgnum, 'png'))
+                txt_path = os.path.join(output_path, 'right', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
+                big_seg_img_path = os.path.join(output_path, 'right', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
+
+            cv2.imwrite(big_img_path, big_img)
+            cv2.imwrite(big_seg_img_path, big_seg_img)
+            f = open(txt_path, 'w')
             f.write(calib_representation)
             f.close()
             ct+=1
