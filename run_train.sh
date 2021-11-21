@@ -22,10 +22,10 @@ set -x
 #pip install tensorflow==1.15.0
 #pip install tensorflow-graphics==1.0.0
 #pip install matplotlib==3.3.0
-#pip install -r depth-and-motion-learning/requirements.txt
+#pip install -r depth_and_motion_learning/requirements.txt
 
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/home/radice/neuralNetworks/depth_and_motion_learning/models/2014-05-06-12-54-54 \
+  --model_dir=/media/RAIDONE/radice/neuralNetworksData/dml/models/resnet18/2014-05-06-12-54-54 \
   --param_overrides='{
     "model": {
       "input": {
@@ -33,7 +33,7 @@ python -m depth_and_motion_learning.depth_motion_field_train \
       }
     },
     "trainer": {
-      "init_ckpt": "/home/radice/neuralNetworks/depth_and_motion_learning/models/resnet18/model.ckpt",
+      "init_ckpt": "/media/RAIDONE/radice/neuralNetworksData/dml/models/resnet18/model.ckpt",
       "init_ckpt_type": "imagenet",
       "max_steps": 125001
     }
