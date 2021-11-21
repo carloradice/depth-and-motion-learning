@@ -60,10 +60,10 @@ def run_all(args):
     output_path = os.path.join(OUTPUT_DIR, dataset, folder)
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-        left = os.path.join(output_path, 'left')
-        os.mkdir(left)
-        right = os.path.join(output_path, 'right')
-        os.mkdir(right)
+    if not os.path.exists(os.path.join(output_path, 'left')):
+        os.mkdir(os.path.join(output_path, 'left'))
+    if not os.path.exists(os.path.join(output_path, 'right')):
+        os.mkdir(os.path.join(output_path, 'right'))
 
     # oxford calib matrix
     fx = 983.044006
