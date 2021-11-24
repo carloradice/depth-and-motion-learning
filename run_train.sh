@@ -25,7 +25,7 @@ set -x
 #pip install -r depth_and_motion_learning/requirements.txt
 
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neuralNetworksData/dml/models/resnet18/2014-05-06-12-54-54 \
+  --model_dir=/media/RAIDONE/radice/neuralNetworksData/dml/models/2014-05-06-12-54-54 \
   --param_overrides='{
     "model": {
       "input": {
