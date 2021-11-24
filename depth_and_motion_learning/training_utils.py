@@ -36,12 +36,15 @@ from absl import logging
 import six
 import tensorflow.compat.v1 as tf
 
+from depth_and_motion_learning.depth_motion_field_model import infer_depth
 from depth_and_motion_learning import maybe_summary
 from depth_and_motion_learning.parameter_container import ParameterContainer
 from tensorflow.contrib import estimator as contrib_estimator
 
-FLAGS = flags.FLAGS
+import numpy as np
+import cv2
 
+FLAGS = flags.FLAGS
 
 flags.DEFINE_string('master', '', 'TensorFlow session address.')
 

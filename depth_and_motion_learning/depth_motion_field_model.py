@@ -32,6 +32,8 @@ from depth_and_motion_learning.dataset import data_processing
 from depth_and_motion_learning.dataset import reader_cityscapes
 from depth_and_motion_learning.losses import loss_aggregator
 
+import cv2
+
 DEFAULT_PARAMS = {
     'batch_size': None,
     'input': {
@@ -473,3 +475,10 @@ def infer_egomotion(rgb_image1, rgb_image2, params):
       tf.matmul(rot12, tf.expand_dims(trans21, -1)), axis=-1) + trans12)
 
   return avg_rot, avg_trans
+
+
+def input_fn_infer(input_image):
+  return tf.estimator.inputs.numpy_input_fn(x={"rgb": input_image}, num_epochs=1, shuffle=False)
+  
+
+
