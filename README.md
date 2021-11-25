@@ -39,11 +39,12 @@ https://github.com/google-research/google-research/tree/master/depth_and_motion_
 
 - python 3.6 
 - pip conda (https://anaconda.org/anaconda/pip)
+- opencv2
 
 Tramite pip conda:
 
 - bazel conda 0.26.1 (https://anaconda.org/conda-forge/bazel)
-- numpy 18.5
+- numpy 18.5 (1.19.5 dopo aver installato opencv2)
 - matplotlib==3.3.0            
 - tensorflow-graphics==1.0.0   
 
@@ -67,6 +68,9 @@ Tramite conda:
  
 Guardare [struct2depth](https://github.com/tensorflow/models/tree/archive/research/struct2depth) 
 per il formato delle immagini di training.
+
+Nota: prima di esegurire lo script generare le maschere delle immagini tramite 
+[mask-rcnn](https://github.com/carloradice/mask-rcnn). 
 
 Esempio:
 ```shell
