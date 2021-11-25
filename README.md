@@ -68,18 +68,26 @@ Tramite conda:
 Guardare [struct2depth](https://github.com/tensorflow/models/tree/archive/research/struct2depth) 
 per il formato delle immagini di training.
 
-Per generare il file in formato **txt** contenente i percorsi alle immagini di 
-training, guardare `generator/train_file_generator.py`
+Esempio:
+```shell
+python depth_and_motion_learning/generator/gen_data_oxford.py --folder
+```
 
-Example:
-1. `python gen_data_oxford.py --folder 2014-05-06-12-54-54`
-2. `python train_file_generator.py --folder 2014-05-06-12-54-54 --dataset OXFORD`
+Per generare il file **train.txt** contenente i percorsi alle immagini di 
+training, eseguire:
 
+```shell
+python depth_and_motion_learning/generator/train_file_generator.py --folder --dataset
+```
 
 ## Training
 
-- `bash run_train.sh`
+```shell
+bash run_train.sh
+```
 
 ## Testing
 
-- `bash run_predict.sh` 
+```shell
+bash run_predict.sh
+```
