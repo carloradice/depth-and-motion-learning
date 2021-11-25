@@ -16,7 +16,7 @@ https://github.com/google-research/google-research/tree/master/depth_and_motion_
 - Vedere file [tensorflow-from-source-guide.md](https://github.com/carloradice/tesi/blob/main/tensorflow-from-source-guide.md)
 - CUDA 10.1.243 
 - CUDNN versione 7.6.5
-- In tensorflow/config.py quando viene fatto il build di tensorflow aggiungere questo codice alla riga 1357
+- In `tensorflow/config.py` quando viene fatto il build di tensorflow aggiungere questo codice alla riga 1357
 
 `  config = {
 'cublas_include_dir': '/home/radice/customCuda/cuda-10.1.243/include',
@@ -60,26 +60,26 @@ Tramite conda:
 - torchfile (conda install -c conda-forge torchfile)
 
 #### Modifiche
-- cambiare: import cPickle as pickle --> import pickle as pickle
+- cambiare: `import cPickle as pickle` --> `import pickle as pickle`
 
 
-## Generazione file di train
+## Costruzione dataset di training
+ 
+Guardare [struct2depth](https://github.com/tensorflow/models/tree/archive/research/struct2depth) 
+per il formato delle immagini di training.
 
-Guardare: 
-https://github.com/tensorflow/models/tree/archive/research/struct2depth
-per generare file .txt di train, è necesario prima avere i dati nel formato struct2depth e poi 
-generare il file .txt contenente il percorso ai dati.
+Per generare il file in formato **txt** contenente i percorsi alle immagini di 
+training, guardare `generator/train_file_generator.py`
 
-Esempio:
-
-1. python gen_data_oxford.py --folder 2014-05-06-12-54-54
-2. python train_file_generator.py --folder 2014-05-06-12-54-54 --dataset OXFORD
+Example:
+1. `python gen_data_oxford.py --folder 2014-05-06-12-54-54`
+2. `python train_file_generator.py --folder 2014-05-06-12-54-54 --dataset OXFORD`
 
 
 ## Training
 
-- eseguire run_train.sh
+- `bash run_train.sh`
 
 ## Testing
 
-- eseguire run_predict.sh 
+- `bash run_predict.sh` 
