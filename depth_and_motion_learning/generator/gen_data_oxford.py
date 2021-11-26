@@ -10,6 +10,10 @@ import numpy as np
 import cv2
 import os, glob
 import argparse
+# run time
+import timeit
+# time format
+import time
 
 
 SEQ_LENGTH = 3
@@ -79,6 +83,9 @@ def run_all(args):
     #                           [0.0, 0.0, 1.0]])
 
     for subfolder in ['processed/stereo/left', 'processed/stereo/right']:
+        start_partial = timeit.default_timer()
+        current_seg = start_partial
+
         ct = 1
         # conversione in jpg
         files_path = os.path.join(input_path, subfolder)
@@ -149,7 +156,19 @@ def run_all(args):
             f = open(txt_path, 'w')
             f.write(calib_representation)
             f.close()
+
+            if ct%1000==0:
+                print('->', ct, 'Done')
+                stop_seg = timeit.default_timer()
+                seg_run_time = int(stop_seg - current_seg)
+                print('-> Segment run time:', time.strftime('%H:%M:%S', time.gmtime(seg_run_time)))
+                current_seg += seg_run_time
+
             ct+=1
+
+        stop_partial = timeit.default_timer()
+        partial_run_time = int(stop_partial - start_partial)
+        print('-> Partial run time:', time.strftime('%H:%M:%S', time.gmtime(partial_run_time)))
 
     print('-> DONE')
 
@@ -159,5 +178,15 @@ def main(args):
 
 
 if __name__ == '__main__':
+    # start timer
+    start = timeit.default_timer()
+
     args = parse_args()
     app.run(main(args))
+
+    # stop timer
+    stop = timeit.default_timer()
+
+    # total run time
+    total_run_time = int(stop - start)
+    print('-> Total run time:', time.strftime('%H:%M:%S', time.gmtime(total_run_time)))
