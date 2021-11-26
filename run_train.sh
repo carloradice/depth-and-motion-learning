@@ -16,24 +16,16 @@
 set -e
 set -x
 
-#virtualenv -p python3 .
-#source ./bin/activate
-
-#pip install tensorflow==1.15.0
-#pip install tensorflow-graphics==1.0.0
-#pip install matplotlib==3.3.0
-#pip install -r depth_and_motion_learning/requirements.txt
-
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neuralNetworksData/dml/models/2014-05-06-12-54-54 \
+  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-12-54-54 \
   --param_overrides='{
     "model": {
       "input": {
-        "data_path": "/home/radice/neuralNetworks/depth_and_motion_learning/splits/OXFORD/2014-05-06-12-54-54/train.txt"
+        "data_path": "/home/radice/neuralNetworks/depht-depth_and_motion_learning/depth_and_motion_learning/splits/OXFORD/2014-05-06-12-54-54/train.txt"
       }
     },
     "trainer": {
-      "init_ckpt": "/media/RAIDONE/radice/neuralNetworksData/dml/models/resnet18/model.ckpt",
+      "init_ckpt": "/media/RAIDONE/radice/neuralNetworksData/depth_and_motion_learning/models/resnet18/model.ckpt",
       "init_ckpt_type": "imagenet",
       "max_steps": 125001
     }
