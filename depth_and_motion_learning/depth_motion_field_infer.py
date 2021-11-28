@@ -34,9 +34,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-
-  #image_file = "/home/carlo/Documents/tesi/0000000507.jpg"
-  image_file = "/home/carlo/Documents/tesi/649.jpg"
+  image_file = "/media/RAIDONE/radice/2014-06-26-09-31-18/processed/stereo/left/633.jpg"
   input_image = cv2.imread(image_file).astype(np.float32)
   input_image = input_image * (1 / 255.0)
   print(input_image.shape)

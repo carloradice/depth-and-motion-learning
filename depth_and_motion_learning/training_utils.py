@@ -386,19 +386,19 @@ def run_local_inference(losses_fn,
     plt.figure(figsize=(30,15))
     plt.imshow(1 / depth[:, :], cmap='plasma')
     plt.axis('off')
-    plt.savefig("/home/carlo/Documents/tesi/649_infer.png")
+    plt.savefig("/media/RAIDONE/radice/633_infer.png")
     #plt.show()
 
 
     
     hist, bins = np.histogram(lol, bins=range(0,255))
     plt.plot(bins[:-1], hist)
-    plt.savefig("/home/carlo/Documents/tesi/649_hist.png")
+    plt.savefig("/media/RAIDONE/radice/633_hist.png")
 
     depth_img = np.reshape(lol, (128, 416)) 
     max_val = np.max(depth_img)
     depth_img = depth_img * (255/max_val)
-    cv2.imwrite("/home/carlo/Documents/tesi/649_output.png", depth_img)
+    cv2.imwrite("/media/RAIDONE/radice/633_output.png", depth_img)
     #cv2.imshow("depth", depth_img)
     #cv2.waitKey(0)
     
