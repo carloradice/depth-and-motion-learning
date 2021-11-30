@@ -36,12 +36,15 @@ from absl import logging
 import six
 import tensorflow.compat.v1 as tf
 
+from depth_and_motion_learning.depth_motion_field_model import infer_depth
 from depth_and_motion_learning import maybe_summary
 from depth_and_motion_learning.parameter_container import ParameterContainer
 from tensorflow.contrib import estimator as contrib_estimator
 
-FLAGS = flags.FLAGS
+import numpy as np
+import cv2
 
+FLAGS = flags.FLAGS
 
 flags.DEFINE_string('master', '', 'TensorFlow session address.')
 
@@ -304,4 +307,150 @@ def train(input_fn, loss_fn, get_vars_to_restore_fn=None):
       json.dumps(params.as_dict(), indent=2, sort_keys=True, default=str))
 
   run_local_training(loss_fn, input_fn, params.trainer, params.model,
-                     vars_to_restore_fn)
+                       vars_to_restore_fn)
+
+
+def estimator_spec_fn_infer(features, labels, mode, params):
+    del labels #unused
+
+    # depth estimation output of network
+    print("IN estimator_spec_fn_infer")
+    print(features['rgb'].shape)
+    depth_net_out = infer_depth(rgb_image=features['rgb'], params=params)
+
+    return(tf.estimator.EstimatorSpec(mode=mode, predictions=depth_net_out))
+
+
+def run_local_inference(losses_fn,
+                       input_fn,
+                       trainer_params_overrides,
+                       model_params,
+                       vars_to_restore_fn=None):
+    """Run a simple single-mechine traing loop.
+
+  Args:
+    losses_fn: A callable that receives two arguments, `features` and `params`,
+      both are dictionaries, and returns a dictionary whose values are the
+      losses. Their sum is the total loss to be minimized.
+    input_fn: A callable that complies with tf.Estimtor's definition of
+      input_fn.
+    trainer_params_overrides: A dictionary or a ParameterContainer with
+      overrides for the default values in TRAINER_PARAMS above.
+    model_params: A ParameterContainer that will be passed to the model (i. e.
+      to losses_fn and input_fn).
+    vars_to_restore_fn: A callable that receives no arguments. When called,
+      expected to provide a dictionary that maps the checkpoint name of each
+      variable to the respective variable object. This dictionary will be used
+      as `var_list` in a Saver object used for initializing from the checkpoint
+      at trainer_params.init_ckpt. If None, the default saver will be used.
+  """
+    print("\nIN run_local_inference\n")
+    trainer_params = ParameterContainer.from_defaults_and_overrides(
+        TRAINER_PARAMS, trainer_params_overrides, is_strict=True)
+
+    run_config_params = {
+        'model_dir':
+            trainer_params.model_dir,
+        'save_summary_steps':
+            5,
+        'keep_checkpoint_every_n_hours':
+            trainer_params.keep_checkpoint_every_n_hours,
+        'log_step_count_steps':
+            25,
+    }
+    logging.info(
+        'Estimators run config parameters:\n%s',
+        json.dumps(run_config_params, indent=2, sort_keys=True, default=str))
+    run_config = tf.estimator.RunConfig(**run_config_params)
+
+
+    init_hook = InitFromCheckpointHook(trainer_params.model_dir,
+                                       trainer_params.init_ckpt,
+                                       vars_to_restore_fn)
+
+    estimator = tf.estimator.Estimator(
+        model_fn=estimator_spec_fn_infer,
+        config=run_config,
+        params=model_params.as_dict())
+
+    print("\n\nPRE estimator.predict")
+    lol_pred = estimator.predict(input_fn=input_fn, predict_keys=None, hooks=[init_hook])
+
+    lol = np.array(list(lol_pred))
+
+    print(lol.shape)
+
+    import matplotlib.pyplot as plt
+    depth = lol[0, :, :, :]
+    depth = cv2.resize(depth, (416, 128))
+    plt.figure(figsize=(30,15))
+    plt.imshow(1 / depth[:, :], cmap='plasma')
+    plt.axis('off')
+    plt.savefig("/media/RAIDONE/radice/633_infer.png")
+    #plt.show()
+
+
+    
+    hist, bins = np.histogram(lol, bins=range(0,255))
+    plt.plot(bins[:-1], hist)
+    plt.savefig("/media/RAIDONE/radice/633_hist.png")
+
+    depth_img = np.reshape(lol, (128, 416)) 
+    max_val = np.max(depth_img)
+    depth_img = depth_img * (255/max_val)
+    cv2.imwrite("/media/RAIDONE/radice/633_output.png", depth_img)
+    #cv2.imshow("depth", depth_img)
+    #cv2.waitKey(0)
+    
+    print("\n\nPOST estimator.predict")
+
+    print("\nOUT run_local_inference")
+
+
+def infer(input_fn, loss_fn, get_vars_to_restore_fn=None):
+    """Run training.
+
+  Args:
+    input_fn: A tf.Estimator compliant input_fn.
+    loss_fn: a callable with the signature loss_fn(features, mode, params),
+      where `features` is a dictionary mapping strings to tf.Tensors, `mode` is
+      a tf.estimator.ModeKeys (TRAIN, EVAL, PREDICT), and `params` is a
+      dictionary mapping strings to hyperparameters (could be nested). It
+      returns a dictionary mapping strings to scalar tf.Tensor-s representing
+      losses. Their sum is the total training loss.
+    get_vars_to_restore_fn: A callable that receives a string argument
+      (intdicating the type of initialization) and returns a vars_to_restore_fn.
+      The latter is a callable that receives no arguments and returns a
+      dictionary that can be passed to a tf.train.Saver object's constructor as
+      a `var_list` to indicate which variables to load from what names in the
+      checnpoint.
+  """
+    params = ParameterContainer({
+        'model': {
+            'batch_size': 1,
+            'input': {}
+        },
+    }, {'trainer': {
+        'master': FLAGS.master,
+        'model_dir': FLAGS.model_dir
+    }})
+
+    params.override(FLAGS.param_overrides)
+
+    init_ckpt_type = params.trainer.get('init_ckpt_type')
+
+    if init_ckpt_type and not get_vars_to_restore_fn:
+        raise ValueError(
+            'An init_ckpt_type was specified (%s), but no get_vars_to_restore_fn '
+            'was provided.' % init_ckpt_type)
+
+    vars_to_restore_fn = (
+        get_vars_to_restore_fn(init_ckpt_type) if init_ckpt_type else None)
+
+    logging.info(
+        'Starting training with the following parameters:\n%s',
+        json.dumps(params.as_dict(), indent=2, sort_keys=True, default=str))
+
+    run_local_inference(loss_fn, input_fn, params.trainer, params.model,
+                       vars_to_restore_fn)
+    

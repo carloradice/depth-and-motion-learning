@@ -1,2 +1,5 @@
-splits/*
-models/*
+/depth_and_motion_learning/models/*
+/depth_and_motion_learning/__pycache__/*
+/depth_and_motion_learning/dataset/__pycache__/*
+/depth_and_motion_learning/losses/__pycache__/*
+/depth_and_motion_learning/splits/

@@ -7,7 +7,7 @@ import glob
 import os
 
 INPUT_DIR = '/media/RAIDONE/radice/STRUCT2DEPTH'
-OUTPUT_DIR = '/home/radice/neuralNetworks/depth_and_motion_learning/splits'
+OUTPUT_DIR = '/home/radice/neuralNetworks/depth-and-motion-learning/depth_and_motion_learning/splits'
 
 
 def parse_args():
@@ -43,7 +43,6 @@ def generator(args):
         # HARD CODED
         path = os.path.join(input_path, 'left')
         files = glob.glob(path + '/*[0-9].png')
-        print(files)
         files = sorted(files)
 
         names = []
