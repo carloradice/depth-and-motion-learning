@@ -90,14 +90,6 @@ python depth_and_motion_learning/generator/train_file_generator.py --folder --da
 bash run_train.sh
 ```
 
-### Oxford prove
-Vengno dati in input anche i parametri intrinseci della camera.
-
-- run parziale 2014-05-06-12-54-54 
-- run completa 2014-11-18-13-20-12
-  - circa 35 000 frames 
-  - rimossi primi 300 frames
-
 ## Testing
 
 ```shell
