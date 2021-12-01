@@ -84,12 +84,12 @@ training, eseguire:
 python depth_and_motion_learning/generator/train_file_generator.py --folder --dataset
 ```
 
-Per generare file di train composti da più routes, eseguire:
+Per generare file di train composti da più routes, dopo aver generato i relativi file **train.txt**, 
+eseguire:
 
 ```shell
 python depth_and_motion_learning/generator/train_file_combiner.py --list --dataset
 ```
-
 
 ## Training
 
