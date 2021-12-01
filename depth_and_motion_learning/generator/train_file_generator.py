@@ -6,8 +6,8 @@ import argparse
 import glob
 import os
 
-INPUT_DIR = '/media/RAIDONE/radice/STRUCT2DEPTH'
-OUTPUT_DIR = '/home/radice/neuralNetworks/depth-and-motion-learning/depth_and_motion_learning/splits'
+INPUT_DIR = '/media/RAIDONE/radice/datasets'
+OUTPUT_DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits'
 
 
 def parse_args():
@@ -17,7 +17,7 @@ def parse_args():
                         required=True)
     parser.add_argument('--dataset', type=str,
                         help='dataset',
-                        choices=['KITTI', 'OXFORD'])
+                        choices=['kitti', 'oxford'])
     return parser.parse_args()
 
 
@@ -33,8 +33,8 @@ def write_txt(file, path):
 def generator(args):
     folder = args.folder
     dataset = args.dataset
-    if dataset == 'OXFORD':
-        input_path = os.path.join(INPUT_DIR, dataset, folder)
+    if dataset == 'oxford':
+        input_path = os.path.join(INPUT_DIR, dataset, folder, 'struct2depth')
         output_path = os.path.join(OUTPUT_DIR, dataset, folder)
 
         if not os.path.isdir(output_path):
