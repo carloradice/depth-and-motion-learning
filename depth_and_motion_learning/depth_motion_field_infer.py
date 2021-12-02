@@ -35,20 +35,14 @@ def main(argv):
     raise app.UsageError('Too many command-line arguments.')
 
   image_file = "/media/RAIDONE/radice/2014-06-26-09-31-18/processed/stereo/left/633.jpg"
+  print('-> Input image path', image_file)
   input_image = cv2.imread(image_file).astype(np.float32)
   input_image = input_image * (1 / 255.0)
-  print(input_image.shape)
 
-  encoded_image = tf.io.read_file(image_file)
-  decoded_image = tf.image.decode_png(encoded_image, channels=3)
-  decoded_image = tf.to_float(decoded_image) * (1 / 255.0)
-
-  
+  print('-> Input image shape before resize', input_image.shape)
   input_image = cv2.resize(input_image, (416, 128)) 
-  print(input_image.shape)  
+  print('-> Input image shape after resize', input_image.shape)
   input_batch = np.reshape(input_image, (1, 128, 416, 3))
-  # cv2.imshow("input", np.reshape(input_batch, (128,416,3)))
-  # cv2.waitKey(0)
 
   training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
                        depth_motion_field_model.loss_fn,
