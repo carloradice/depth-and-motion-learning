@@ -47,8 +47,8 @@ def main(argv):
   input_image = cv2.resize(input_image, (416, 128)) 
   print(input_image.shape)  
   input_batch = np.reshape(input_image, (1, 128, 416, 3))
-  #cv2.imshow("input", np.reshape(input_batch, (128,416,3)))
-  #cv2.waitKey(0)
+  # cv2.imshow("input", np.reshape(input_batch, (128,416,3)))
+  # cv2.waitKey(0)
 
   training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
                        depth_motion_field_model.loss_fn,

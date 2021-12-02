@@ -43,6 +43,7 @@ from tensorflow.contrib import estimator as contrib_estimator
 
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 FLAGS = flags.FLAGS
 
@@ -374,33 +375,33 @@ def run_local_inference(losses_fn,
         params=model_params.as_dict())
 
     print("\n\nPRE estimator.predict")
-    lol_pred = estimator.predict(input_fn=input_fn, predict_keys=None, hooks=[init_hook])
+    pred = estimator.predict(input_fn=input_fn, predict_keys=None, hooks=[init_hook])
 
-    lol = np.array(list(lol_pred))
+    pred_array = np.array(list(pred))
 
-    print(lol.shape)
+    print(pred_array.shape)
 
-    import matplotlib.pyplot as plt
-    depth = lol[0, :, :, :]
+    depth = pred_array[0, :, :, :]
     depth = cv2.resize(depth, (416, 128))
+    # use matplotlib
     plt.figure(figsize=(30,15))
     plt.imshow(1 / depth[:, :], cmap='plasma')
     plt.axis('off')
     plt.savefig("/media/RAIDONE/radice/633_infer.png")
-    #plt.show()
+    # plt.show()
 
 
     
-    hist, bins = np.histogram(lol, bins=range(0,255))
+    hist, bins = np.histogram(pred_array, bins=range(0,255))
     plt.plot(bins[:-1], hist)
     plt.savefig("/media/RAIDONE/radice/633_hist.png")
 
-    depth_img = np.reshape(lol, (128, 416)) 
+    depth_img = np.reshape(pred_array, (128, 416))
     max_val = np.max(depth_img)
     depth_img = depth_img * (255/max_val)
     cv2.imwrite("/media/RAIDONE/radice/633_output.png", depth_img)
-    #cv2.imshow("depth", depth_img)
-    #cv2.waitKey(0)
+    # cv2.imshow("depth", depth_img)
+    # cv2.waitKey(0)
     
     print("\n\nPOST estimator.predict")
 
