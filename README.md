@@ -4,10 +4,9 @@ Forked from:
 - https://github.com/google-research/google-research/tree/master/depth_and_motion_learning
 - https://github.com/PhilippSchmaelzle/mono_depth/tree/inference_with_original_code_structure
 
-
 ## Struttura cartella
-In depth_and_motion_learning sono presenti tutti i file python che vengono chiamati dai 2 script bash presenti nella directory principale.
 
+In depth_and_motion_learning sono presenti tutti i file python che vengono chiamati dai 2 script bash presenti nella directory principale.
 
 ## Installazione 
 
@@ -63,6 +62,12 @@ Tramite conda:
 #### Modifiche
 - cambiare: `import cPickle as pickle` --> `import pickle as pickle`
 
+## Ottenimento Dataset
+
+### Oxford
+Scaricare dataset da: https://robotcar-dataset.robots.ox.ac.uk/
+
+Effettuare preprocessing.
 
 ## Costruzione dataset di training
  
@@ -72,7 +77,8 @@ per il formato delle immagini di training.
 Nota: prima di esegurire lo script generare le maschere delle immagini tramite 
 [mask-rcnn](https://github.com/carloradice/mask-rcnn). 
 
-Esempio:
+Generare il dataset, ad esempio per Oxford Robot Car, con il comando:
+
 ```shell
 python depth_and_motion_learning/generator/gen_data_oxford.py --folder
 ```
