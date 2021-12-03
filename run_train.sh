@@ -17,7 +17,7 @@ set -e
 set -x
 
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-14-19 \
+  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-14-19_use_mask_250000_steps \
   --param_overrides='{
     "model": {
       "input": {
@@ -27,6 +27,6 @@ python -m depth_and_motion_learning.depth_motion_field_train \
     "trainer": {
       "init_ckpt": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/resnet18/model.ckpt",
       "init_ckpt_type": "imagenet",
-      "max_steps": 125001
+      "max_steps": 250000
     }
   }'
