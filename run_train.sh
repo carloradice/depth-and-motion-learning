@@ -17,11 +17,11 @@ set -e
 set -x
 
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-14-19_use_mask_250000_steps \
+  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-11-28-12-07-13_250000-steps \
   --param_overrides='{
     "model": {
       "input": {
-        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/combined/2014-05-06-12-54-54_2014-05-14-13-46-12_2014-05-19-12-51-39_train_files.txt"
+        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/2014-11-28-12-07-13/train.txt"
       }
     },
     "trainer": {
