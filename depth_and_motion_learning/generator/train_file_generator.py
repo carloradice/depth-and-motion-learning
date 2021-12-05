@@ -5,6 +5,7 @@
 import argparse
 import glob
 import os
+import random
 
 INPUT_DIR = '/media/RAIDONE/radice/datasets'
 OUTPUT_DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits'
@@ -42,21 +43,50 @@ def generator(args):
 
         # HARD CODED
         path = os.path.join(input_path, 'left')
+        print('-> Examples path', path)
         files = glob.glob(path + '/*[0-9].png')
         files = sorted(files)
+        print('-> Number of examples before cut', len(files))
+        files = files[100:(len(files)-100)]
+        print('-> Number of examples after cut', len(files))
 
-        names = []
+        pairs = []
         for index, f in enumerate(files):
             if index == len(files)-1:
-                names.append(path + ' ' + os.path.basename(f).split('.')[0])
+                pairs.append(path + ' ' + os.path.basename(f).split('.')[0])
             else:
-                names.append(path + ' ' + os.path.basename(f).split('.')[0] + '\n')
+                pairs.append(path + ' ' + os.path.basename(f).split('.')[0] + '\n')
 
-        train_path = os.path.join(output_path, '{}.{}'.format('train', 'txt'))
-        write_txt(names, train_path)
+        # divisione train/test
+        cut = int(len(pairs) * 0.9) + 1
+        train = pairs[:cut]
+        test = pairs[cut:]
+
+        splits = os.path.join(output_path, '{}.txt')
+
+        # lista dei files in ordine
+        write_txt(pairs, splits.format('examples'))
+
+        # train
+        print('-> Number of examples for training', len(train))
+        # Shuffle
+        random.shuffle(train)
+        write_txt(train, splits.format('train'))
+
+        # test
+        print('-> Number of examples for testing', len(test))
+        if len(test) > 100:
+            print('-> Subsample examples for testing')
+            N = 2
+            subsample = test[::N]
+            while len(subsample) > 100:
+                subsample = test[::N]
+                N += 2
+            test = subsample
+        print('-> Number of examples for testing', len(test))
+        write_txt(test, splits.format('test'))
 
 
 if __name__ == '__main__':
     args = parse_args()
     generator(args)
-
