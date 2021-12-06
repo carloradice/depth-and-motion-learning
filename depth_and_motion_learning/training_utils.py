@@ -384,28 +384,31 @@ def run_local_inference(losses_fn,
     depth = pred_array[0, :, :, :]
     depth = cv2.resize(depth, (416, 128))
     # use matplotlib
-    plt.figure(figsize=(30,15))
-    plt.imshow(1 / depth[:, :], cmap='plasma')
-    plt.axis('off')
-    plt.savefig("/media/RAIDONE/radice/633_infer.png")
+    # plt.figure(figsize=(30,15))
+    # plt.imshow(1 / depth[:, :], cmap='plasma')
+    # plt.axis('off')
+    # plt.savefig("/media/RAIDONE/radice/633_infer.png")
     # plt.show()
-
-
+    depth_fig = plt.figure(figsize=(30,15))
+    depth_ax = depth_fig.add_subplot(111)
+    depth_ax.imshow(1 / depth[:, :], cmap='plasma')
     
-    hist, bins = np.histogram(pred_array, bins=range(0,255))
-    plt.plot(bins[:-1], hist)
-    plt.savefig("/media/RAIDONE/radice/633_hist.png")
+    # hist, bins = np.histogram(pred_array, bins=range(0,255))
+    # plt.plot(bins[:-1], hist)
+    # plt.savefig("/media/RAIDONE/radice/633_hist.png")
 
-    depth_img = np.reshape(pred_array, (128, 416))
-    max_val = np.max(depth_img)
-    depth_img = depth_img * (255/max_val)
-    cv2.imwrite("/media/RAIDONE/radice/633_output.png", depth_img)
+    # depth_img = np.reshape(pred_array, (128, 416))
+    # max_val = np.max(depth_img)
+    # bw = depth_img * (255/max_val)
+    #cv2.imwrite("/media/RAIDONE/radice/633_output.png", depth_img)
     # cv2.imshow("depth", depth_img)
     # cv2.waitKey(0)
     
     print("\n\nPOST estimator.predict")
 
     print("\nOUT run_local_inference")
+
+    return depth_ax
 
 
 def infer(input_fn, loss_fn, get_vars_to_restore_fn=None):
@@ -452,6 +455,7 @@ def infer(input_fn, loss_fn, get_vars_to_restore_fn=None):
         'Starting training with the following parameters:\n%s',
         json.dumps(params.as_dict(), indent=2, sort_keys=True, default=str))
 
-    run_local_inference(loss_fn, input_fn, params.trainer, params.model,
-                       vars_to_restore_fn)
-    
+    depth = run_local_inference(loss_fn, input_fn, params.trainer, params.model,
+                                           vars_to_restore_fn)
+
+    return depth
