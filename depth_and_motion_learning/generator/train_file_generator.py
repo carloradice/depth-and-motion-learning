@@ -84,6 +84,8 @@ def generator(args):
                 N += 2
             test = subsample
         print('-> Number of examples for testing', len(test))
+        for index, line in enumerate(test):
+            test[index] = line.replace('struct2depth', 'stereo')
         write_txt(test, splits.format('test'))
 
 
