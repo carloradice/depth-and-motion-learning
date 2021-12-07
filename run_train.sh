@@ -17,16 +17,16 @@ set -e
 set -x
 
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-11-28-12-07-13_250000-steps \
+  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-12-54-54_rcnn-mask-90 \
   --param_overrides='{
     "model": {
       "input": {
-        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/2014-11-28-12-07-13/train.txt"
+        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/2014-05-06-12-54-54/train.txt"
       }
     },
     "trainer": {
       "init_ckpt": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/resnet18/model.ckpt",
       "init_ckpt_type": "imagenet",
-      "max_steps": 250000
+      "max_steps": 100000
     }
   }'
