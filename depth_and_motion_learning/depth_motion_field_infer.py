@@ -116,13 +116,13 @@ def main(argv):
     save_depth(file=lines, save_path=dynamic_examples_save_path, flag=1)
 
     # Default examples
-    default_test_files = ['/media/RAIDONE/radice/2014-06-26-09-31-18/processed/stereo/left/633.jpg']
-
-    default_examples_save_path = os.path.join(save_path, 'default_examples')
-    if not os.path.isdir(default_examples_save_path):
-        os.makedirs(default_examples_save_path)
-
-    save_depth(file=default_test_files, save_path=default_examples_save_path)
+    # default_test_files = ['/media/RAIDONE/radice/2014-06-26-09-31-18/processed/stereo/left/633.jpg']
+    #
+    # default_examples_save_path = os.path.join(save_path, 'default_examples')
+    # if not os.path.isdir(default_examples_save_path):
+    #     os.makedirs(default_examples_save_path)
+    #
+    # save_depth(file=default_test_files, save_path=default_examples_save_path)
 
 
 if __name__ == '__main__':
