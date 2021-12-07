@@ -87,14 +87,14 @@ Per generare il file **train.txt** contenente i percorsi alle immagini di
 training, eseguire:
 
 ```shell
-python depth_and_motion_learning/generator/train_file_generator.py --folder --dataset
+python depth_and_motion_learning/generator/splits_generator.py --folder --dataset
 ```
 
 Per generare file di train composti da più routes, dopo aver generato i relativi file **train.txt**, 
 eseguire:
 
 ```shell
-python depth_and_motion_learning/generator/train_file_combiner.py --list --dataset
+python depth_and_motion_learning/generator/splits_mixer.py --list --dataset
 ```
 
 ## Training
