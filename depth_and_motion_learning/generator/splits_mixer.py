@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Mixes different routes')
 
     parser.add_argument('--list',
-                        help='routes to combine',
+                        help='routes to mix',
                         nargs='+',
                         required=True)
 
@@ -23,9 +23,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def combine(folders, dataset):
+def mix(folders, dataset):
     """
-    Combine multiple splits.
+    Mixes multiple splits.
     """
     train = []
     test = []
@@ -80,7 +80,7 @@ def main(args):
     folders = args.list
     dataset = args.dataset
 
-    combine(folders=folders, dataset=dataset)
+    mix(folders=folders, dataset=dataset)
 
 if __name__ == '__main__':
     args = parse_args()
