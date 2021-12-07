@@ -1,7 +1,6 @@
 """
-Combina gli split di diverse run.
+Unisce gli splits di diverse run.
 """
-
 
 import os
 import random
@@ -10,7 +9,7 @@ import argparse
 DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits'
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Combines different routes')
+    parser = argparse.ArgumentParser(description='Mixes different routes')
 
     parser.add_argument('--list',
                         help='routes to combine',
@@ -38,12 +37,16 @@ def combine(folders, dataset):
         path = os.path.join(DIR, dataset, folder, 'train.txt')
         file = open(path, 'r')
         lines = file.readlines()
-        train.extend(lines[100:(len(lines) - 500)])
         file.close()
-        test.extend(lines[(len(lines) - 500):])
+        train.extend(lines)
+
+        path = os.path.join(DIR, dataset, folder, 'test.txt')
+        file = open(path, 'r')
+        lines = file.readlines()
+        file.close()
+        test.extend(lines)
 
         folders_names += folder + '_'
-
 
     # Shuffle e subsample se le liste sono troppo grandi
     random.shuffle(train)
@@ -52,13 +55,12 @@ def combine(folders, dataset):
         train = random.sample(train, cut)
 
     random.shuffle(test)
-    cut = 1000
+    cut = 100
     if len(test) > cut:
         test = random.sample(test, cut)
 
-
-    splits_path = os.path.join(DIR, dataset, 'combined')
-    splits = os.path.join(splits_path, folders_names + '{}_files.txt')
+    splits_path = os.path.join(DIR, dataset, 'mixed', folders_names)
+    splits = os.path.join(splits_path, '{}.txt')
 
     print('-> Save splits in', splits_path)
 
