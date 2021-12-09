@@ -84,6 +84,8 @@ def main(argv):
     if len(argv) > 1:
         raise app.UsageError('Too many command-line arguments.')
 
+    model_dir = FLAGS.model_dir
+
     # Dynamic examples
     params = parameter_container.ParameterContainer({
       'model': {
@@ -92,8 +94,10 @@ def main(argv):
       },
     }, {'trainer': {
       'master': FLAGS.master,
-      'model_dir': FLAGS.model_dir
+      'model_dir': model_dir
     }})
+
+    model = os.path.basename(model_dir)
 
     params.override(FLAGS.param_overrides)
     input = params.model.get('input')
@@ -105,7 +109,7 @@ def main(argv):
 
     folder = (lines[0].split(' '))[0].split('/')[6]
 
-    save_path = os.path.join(OUTPUT_DIR, folder)
+    save_path = os.path.join(OUTPUT_DIR, model, folder)
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
