@@ -17,8 +17,10 @@ import time
 
 
 SEQ_LENGTH = 3
-WIDTH = 416
-HEIGHT = 128
+# WIDTH = 416
+WIDTH = 640
+# HEIGHT = 128
+HEIGHT = 192
 STEPSIZE = 1
 CROP_AREA = [0, 360, 1280, 730]
 DIR = '/media/RAIDONE/radice/datasets/oxford'
@@ -56,7 +58,7 @@ def run_all(args):
 
     # start processing
     print('-> Processing', path)
-    save_path = os.path.join(DIR, folder, 'struct2depth')
+    save_path = os.path.join(DIR, folder, 'struct2depth_640x192')
     print('-> Save path', save_path)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
