@@ -44,8 +44,11 @@ from tensorflow.contrib import estimator as contrib_estimator
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import wandb
 
 FLAGS = flags.FLAGS
+
+wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True, name="prova")
 
 flags.DEFINE_string('master', '', 'TensorFlow session address.')
 
