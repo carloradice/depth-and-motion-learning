@@ -51,8 +51,11 @@ def save_depth(file, save_path, flag=None):
             # save cropped image per confronto
             cv2.imwrite(example_save_path.format(line[1]), image)
 
-            image = cv2.resize(image, (416, 128))
-            input_batch = np.reshape(image, (1, 128, 416, 3))
+            # image = cv2.resize(image, (416, 128))
+            # input_batch = np.reshape(image, (1, 128, 416, 3))
+
+            image = cv2.resize(image, (640, 192))
+            input_batch = np.reshape(image, (1, 192, 640, 3))
 
             depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
                                          depth_motion_field_model.loss_fn,
@@ -70,8 +73,11 @@ def save_depth(file, save_path, flag=None):
             name = os.path.basename(line).split('.')[0]
             cv2.imwrite(example_save_path.format(name), image)
 
-            image = cv2.resize(image, (416, 128))
-            input_batch = np.reshape(image, (1, 128, 416, 3))
+            # image = cv2.resize(image, (416, 128))
+            # input_batch = np.reshape(image, (1, 128, 416, 3))
+
+            image = cv2.resize(image, (640, 192))
+            input_batch = np.reshape(image, (1, 192, 640, 3))
 
             depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
                                          depth_motion_field_model.loss_fn,

@@ -382,7 +382,8 @@ def run_local_inference(losses_fn,
     print(pred_array.shape)
 
     depth = pred_array[0, :, :, :]
-    depth = cv2.resize(depth, (416, 128))
+    # depth = cv2.resize(depth, (416, 128))
+    depth = cv2.resize(depth, (640, 192))
     # use matplotlib
     # plt.figure(figsize=(30,15))
     # plt.imshow(1 / depth[:, :], cmap='plasma')
