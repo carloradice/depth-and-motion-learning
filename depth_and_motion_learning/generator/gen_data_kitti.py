@@ -20,16 +20,16 @@ import numpy as np
 import cv2
 import os, glob
 
-
 SEQ_LENGTH = 3
 WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
-OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti-dml'
+OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth'
 
 if not OUTPUT_DIR.endswith('/'):
     OUTPUT_DIR = OUTPUT_DIR + '/'
+
 
 def get_line(file, start):
     file = open(file, 'r')
@@ -114,6 +114,7 @@ def run_all():
                     f.write(calib_representation)
                     f.close()
                     ct+=1
+
 
 def main(_):
   run_all()
