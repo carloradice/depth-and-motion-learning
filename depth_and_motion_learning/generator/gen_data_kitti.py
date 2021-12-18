@@ -19,11 +19,14 @@ from absl import app
 import numpy as np
 import cv2
 import os, glob
+import timeit, time
 
 SEQ_LENGTH = 3
 WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
+# mask-rcnn score limit
+LIMIT = 80
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
 OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth'
 
@@ -48,17 +51,16 @@ def get_line(file, start):
 
 
 def run_all():
+    partial_run_time = 0
 
-    for d in glob.glob(INPUT_DIR + '/*/'):
+    for d in glob.glob(INPUT_DIR + '/data' + '/*/'):
 
         date = d.split('/')[-2]
         file_calibration = d + 'calib_cam_to_cam.txt'
         calib_raw = [get_line(file_calibration, 'P_rect_02'), get_line(file_calibration, 'P_rect_03')]
 
         if not os.path.exists(os.path.join(OUTPUT_DIR, date)):
-            os.mkdir(os.path.join(OUTPUT_DIR, date))
-
-        print(d, date, file_calibration, calib_raw)
+            os.makedirs(os.path.join(OUTPUT_DIR, date))
 
         for d2 in glob.glob(d + '*/'):
             seqname = d2.split('/')[-2]
@@ -67,6 +69,8 @@ def run_all():
             half_path = os.path.join(OUTPUT_DIR, date, seqname)
             if not os.path.exists(half_path):
                 os.mkdir(half_path)
+
+            start_seg = timeit.default_timer()
 
             for subfolder in ['image_02/data', 'image_03/data']:
                 ct = 1
@@ -87,6 +91,7 @@ def run_all():
                         ct+=1
                         continue
                     big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
+                    big_seg_img = np.zeros(shape=(HEIGHT, WIDTH * SEQ_LENGTH, 3))
                     wct = 0
 
                     for j in range(i-SEQ_LENGTH, i):  # Collect frames for this sample.
@@ -105,15 +110,38 @@ def run_all():
 
                         calib_representation = ','.join([str(c) for c in calib_current.flatten()])
 
+                        # Load mask for current file
+                        seg_path = os.path.join(INPUT_DIR, 'mask-rcnn', date, seqname, subfolder.replace('/data', ''),
+                                                os.path.basename(files[j]).replace('.png', '.npz'))
+                        l = np.load(seg_path, allow_pickle=True)
+                        segdict = l['arr_0'].item()
+                        segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1], 3])
+                        for i in range(segdict['score_mask'].shape[0]):
+                            for j in range(segdict['score_mask'].shape[1]):
+                                if segdict['score_mask'][i, j] > LIMIT:
+                                    segimg[i, j, :] = 255
+
                         img = cv2.resize(img, (WIDTH, HEIGHT))
                         big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
+
+                        segimg = cv2.resize(segimg, (WIDTH, HEIGHT))
+                        big_seg_img[:, wct * WIDTH:(wct + 1) * WIDTH] = segimg
+
                         wct+=1
 
                     cv2.imwrite(os.path.join(full_path, '{}.png'.format(imgnum)), big_img)
+                    cv2.imwrite(os.path.join(full_path, '{}-fseg.png'.format(imgnum)), big_seg_img)
                     f = open(os.path.join(full_path, '{}_cam.txt'.format(imgnum)), 'w')
                     f.write(calib_representation)
                     f.close()
-                    ct+=1
+
+                    ct += 1
+
+            stop_seg = timeit.default_timer()
+            seg_run_time = int(stop_seg - start_seg)
+            partial_run_time += seg_run_time
+            print('-> Segment run time:', time.strftime('%H:%M:%S', time.gmtime(seg_run_time)))
+            print('-> Partial run time:', time.strftime('%H:%M:%S', time.gmtime(partial_run_time)))
 
 
 def main(_):
@@ -121,4 +149,14 @@ def main(_):
 
 
 if __name__ == '__main__':
-  app.run(main)
+    # start timer
+    start = timeit.default_timer()
+
+    app.run(main)
+
+    # stop timer
+    stop = timeit.default_timer()
+
+    # total run time
+    total_run_time = int(stop - start)
+    print('-> Total run time:', time.strftime('%H:%M:%S', time.gmtime(total_run_time)))
