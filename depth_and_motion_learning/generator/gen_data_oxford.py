@@ -23,6 +23,8 @@ WIDTH = 640
 HEIGHT = 192
 STEPSIZE = 1
 CROP_AREA = [0, 360, 1280, 730]
+# mask-rcnn score limit
+LIMIT = 90
 DIR = '/media/RAIDONE/radice/datasets/oxford'
 
 
@@ -99,7 +101,7 @@ def run_all(args):
 
                 for i in range(segdict['score_mask'].shape[0]):
                     for j in range(segdict['score_mask'].shape[1]):
-                        if segdict['score_mask'][i, j] > 80:
+                        if segdict['score_mask'][i, j] > LIMIT:
                             segimg[i, j] = 255
 
                 ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
