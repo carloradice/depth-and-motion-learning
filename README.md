@@ -82,9 +82,6 @@ Struttura del dataset
 │   │   │   │   │   └── *.png
 │   │   │   │   └── timestamps.txt
 │   │   │   └── image_03
-│   │   │       ├── data
-│   │   │       └── timestamps.txt
-│   │   │  
 │   │   ├── calib_cam_to_cam.txt
 │   │   ├── calib_imu_to_velo.txt
 │   │   └── calib_velo_to_cam.txt
