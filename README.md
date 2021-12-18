@@ -62,12 +62,57 @@ Tramite conda:
 #### Modifiche
 - cambiare: `import cPickle as pickle` --> `import pickle as pickle`
 
-## Ottenimento Dataset
+## Dataset
 
 ### Oxford
 Scaricare dataset da: https://robotcar-dataset.robots.ox.ac.uk/
 
 Effettuare preprocessing.
+
+### Kitti 
+
+Struttura del dataset
+```
+.
+├── data
+│   ├── 2011_09_26
+│   │   ├── 2011_09_26_drive_*
+│   │   │   ├── image_02
+│   │   │   │   ├── data
+│   │   │   │   │   └── *.png
+│   │   │   │   └── timestamps.txt
+│   │   │   └── image_03
+│   │   │       ├── data
+│   │   │       └── timestamps.txt
+│   │   │  
+│   │   ├── calib_cam_to_cam.txt
+│   │   ├── calib_imu_to_velo.txt
+│   │   └── calib_velo_to_cam.txt
+│   ├── 2011_09_28
+│   ├── 2011_09_29
+│   ├── 2011_09_30
+│   └── 2011_10_03
+├── mask-rcnn
+│   ├── 2011_09_26_drive_*
+│   │   ├── image_02
+│   │   │   └── *.npz
+│   │   └── image_03
+│   ├── 2011_09_28
+│   ├── 2011_09_29
+│   ├── 2011_09_30
+│   └── 2011_10_03
+└── struct2depth
+          ├── 2011_09_26_drive_*
+          │   ├── image_02
+          │   │   └── *.png
+          │   │   └── *-fseg.png
+          │   │   └── *-cam.txt
+          │   └── image_03
+          ├── 2011_09_28
+          ├── 2011_09_29
+          ├── 2011_09_30
+          └── 2011_10_03
+```
 
 ## Costruzione dataset di training
  
