@@ -74,7 +74,6 @@ def run_all():
 
             for subfolder in ['image_02/data', 'image_03/data']:
                 ct = 1
-                # seqname = d2.split('/')[-2] + subfolder.replace('image', '').replace('/data', '')
 
                 full_path = os.path.join(half_path, subfolder.replace('/data', ''))
                 if not os.path.exists(full_path):
@@ -87,9 +86,12 @@ def run_all():
                 files = sorted(files)
                 for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
                     imgnum = str(ct).zfill(10)
-                    if os.path.exists(OUTPUT_DIR + seqname + '/' + imgnum + '.png'):
+                    if (os.path.isfile(os.path.join(full_path, '{}.png'.format(imgnum)))) and \
+                            (os.path.isfile(os.path.join(full_path, '{}-fseg.png'.format(imgnum)))) and \
+                            (os.path.isfile(os.path.join(full_path, '{}_cam.txt'.format(imgnum)))):
                         ct+=1
                         continue
+
                     big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
                     big_seg_img = np.zeros(shape=(HEIGHT, WIDTH * SEQ_LENGTH, 3))
                     wct = 0
