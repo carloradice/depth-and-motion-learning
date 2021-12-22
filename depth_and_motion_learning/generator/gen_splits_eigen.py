@@ -17,11 +17,13 @@ def fill_data(lines):
         # folder = 'image_02' or 'image_s03'
         basename = path[4].split('.')[0]
 
-        l = os.path.join(DEFAULT_PATH, date, sequence, 'image_02') + ' ' + '{}{}'.format(basename, '\n')
-        r = os.path.join(DEFAULT_PATH, date, sequence, 'image_03') + ' ' + '{}{}'.format(basename, '\n')
-
-        data.append(l)
-        data.append(r)
+        # Se esiste il file, aggiungerlo allo split
+        f = os.path.join(DEFAULT_PATH, date, sequence, 'image_02', '{}.png'.format(basename))
+        if os.path.isfile(f):
+            l = os.path.join(DEFAULT_PATH, date, sequence, 'image_02') + ' ' + '{}{}'.format(basename, '\n')
+            r = os.path.join(DEFAULT_PATH, date, sequence, 'image_03') + ' ' + '{}{}'.format(basename, '\n')
+            data.append(l)
+            data.append(r)
 
     return data
 
