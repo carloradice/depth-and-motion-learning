@@ -22,11 +22,11 @@ import os, glob
 import timeit, time
 
 SEQ_LENGTH = 3
-WIDTH = 416
-HEIGHT = 128
+WIDTH = 640
+HEIGHT = 192
 STEPSIZE = 1
 # mask-rcnn score limit
-LIMIT = 80
+LIMIT = 90
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
 OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth'
 
@@ -86,11 +86,11 @@ def run_all():
                 files = sorted(files)
                 for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
                     imgnum = str(ct).zfill(10)
-                    if (os.path.isfile(os.path.join(full_path, '{}.png'.format(imgnum)))) and \
-                            (os.path.isfile(os.path.join(full_path, '{}-fseg.png'.format(imgnum)))) and \
-                            (os.path.isfile(os.path.join(full_path, '{}_cam.txt'.format(imgnum)))):
-                        ct+=1
-                        continue
+                    # if (os.path.isfile(os.path.join(full_path, '{}.png'.format(imgnum)))) and \
+                    #         (os.path.isfile(os.path.join(full_path, '{}-fseg.png'.format(imgnum)))) and \
+                    #         (os.path.isfile(os.path.join(full_path, '{}_cam.txt'.format(imgnum)))):
+                    #     ct+=1
+                    #     continue
 
                     big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
                     big_seg_img = np.zeros(shape=(HEIGHT, WIDTH * SEQ_LENGTH, 3))
@@ -118,10 +118,9 @@ def run_all():
                         l = np.load(seg_path, allow_pickle=True)
                         segdict = l['arr_0'].item()
                         segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1], 3])
-                        for i in range(segdict['score_mask'].shape[0]):
-                            for j in range(segdict['score_mask'].shape[1]):
-                                if segdict['score_mask'][i, j] > LIMIT:
-                                    segimg[i, j, :] = 255
+                        index_array = np.where(segdict['score_mask']>=LIMIT)
+                        for i in range(len(index_array[0])):
+                            segimg[index_array[0][i], index_array[1][i], :] = 255
 
                         img = cv2.resize(img, (WIDTH, HEIGHT))
                         big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
@@ -147,7 +146,8 @@ def run_all():
 
 
 def main(_):
-  run_all()
+    #run_all()
+    run_all()
 
 
 if __name__ == '__main__':
