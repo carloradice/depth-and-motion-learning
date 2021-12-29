@@ -32,58 +32,38 @@ import numpy as np
 import os
 
 FLAGS = flags.FLAGS
+WIDTH = 416
+HEIGHT = 128
 CROP_AREA = [0, 360, 1280, 730]
-OUTPUT_DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/inference/oxford'
+OUTPUT_DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/inference'
+DATASET = 'kitti'
 
 
-def save_depth(file, save_path, flag=None):
+def save_depth(file, save_path):
     example_save_path = os.path.join(save_path, '{}.png')
-    if not flag == None:
 
-        for line in file:
+    for line in file:
 
-            line = line.rstrip().split(' ')
-            example = os.path.join(line[0], '{}.{}'.format(line[1], 'png'))
+        line = line.rstrip().split(' ')
+        example = os.path.join(line[0], '{}.{}'.format(line[1], 'png'))
 
-            image = cv2.imread(example).astype(np.float32)
-            image = image[CROP_AREA[1]:CROP_AREA[3], :, :]
+        image = cv2.imread(example).astype(np.float32)
+        image = image[CROP_AREA[1]:CROP_AREA[3], :, :]
 
-            # save cropped image per confronto
-            cv2.imwrite(example_save_path.format(line[1]), image)
+        # save cropped image per confronto
+        cv2.imwrite(example_save_path.format(line[1]), image)
 
-            # image = cv2.resize(image, (416, 128))
-            # input_batch = np.reshape(image, (1, 128, 416, 3))
+        # image = cv2.resize(image, (416, 128))
+        # input_batch = np.reshape(image, (1, 128, 416, 3))
 
-            image = cv2.resize(image, (640, 192))
-            input_batch = np.reshape(image, (1, 192, 640, 3))
+        image = cv2.resize(image, (WIDTH, HEIGHT))
+        input_batch = np.reshape(image, (1, HEIGHT, WIDTH, 3))
 
-            depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
-                                         depth_motion_field_model.loss_fn,
-                                         depth_motion_field_model.get_vars_to_restore_fn)
+        depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
+                                     depth_motion_field_model.loss_fn,
+                                     depth_motion_field_model.get_vars_to_restore_fn)
 
-            depth.figure.savefig(example_save_path.format(line[1] + '_depth'))
-
-    else:
-
-        for line in file:
-            image = cv2.imread(line).astype(np.float32)
-            image = image[CROP_AREA[1]:CROP_AREA[3], :, :]
-
-            # save cropped image per confronto
-            name = os.path.basename(line).split('.')[0]
-            cv2.imwrite(example_save_path.format(name), image)
-
-            # image = cv2.resize(image, (416, 128))
-            # input_batch = np.reshape(image, (1, 128, 416, 3))
-
-            image = cv2.resize(image, (640, 192))
-            input_batch = np.reshape(image, (1, 192, 640, 3))
-
-            depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
-                                         depth_motion_field_model.loss_fn,
-                                         depth_motion_field_model.get_vars_to_restore_fn)
-
-            depth.figure.savefig(example_save_path.format(name + '_depth'))
+        depth.figure.savefig(example_save_path.format(line[1] + '_depth'))
 
 
 def main(argv):
@@ -107,32 +87,66 @@ def main(argv):
 
     params.override(FLAGS.param_overrides)
     input = params.model.get('input')
-    dynamic_test_file_path = input.get('data_path')
+    test_file_path = input.get('data_path')
+    dataset = input.get('dataset')
 
-    dynamic_test_file = open(dynamic_test_file_path, 'r')
-    lines = dynamic_test_file.readlines()
-    dynamic_test_file.close()
+    test_file = open(test_file_path, 'r')
+    lines = test_file.readlines()
+    test_file.close()
 
-    folder = (lines[0].split(' '))[0].split('/')[6]
+    if DATASET == 'oxford':
 
-    save_path = os.path.join(OUTPUT_DIR, model, folder)
-    if not os.path.isdir(save_path):
-        os.makedirs(save_path)
+        folder = (lines[0].split(' '))[0].split('/')[6]
 
-    dynamic_examples_save_path = os.path.join(save_path, 'dynamic_examples')
-    if not os.path.isdir(dynamic_examples_save_path):
-        os.makedirs(dynamic_examples_save_path)
+        save_path = os.path.join(OUTPUT_DIR, 'oxford', model, folder)
+        if not os.path.isdir(save_path):
+            os.makedirs(save_path)
 
-    save_depth(file=lines, save_path=dynamic_examples_save_path, flag=1)
+        examples_save_path = os.path.join(save_path, 'dynamic_examples')
+        if not os.path.isdir(examples_save_path):
+            os.makedirs(examples_save_path)
 
-    # Default examples
-    # default_test_files = ['/media/RAIDONE/radice/2014-06-26-09-31-18/processed/stereo/left/633.jpg']
-    #
-    # default_examples_save_path = os.path.join(save_path, 'default_examples')
-    # if not os.path.isdir(default_examples_save_path):
-    #     os.makedirs(default_examples_save_path)
-    #
-    # save_depth(file=default_test_files, save_path=default_examples_save_path)
+        save_depth(file=lines, save_path=examples_save_path)
+
+
+    if DATASET == 'kitti':
+
+        model = model.split('-', 1)[1:][0]
+
+        for line in lines:
+
+            line = line.split(' ')
+
+            date = line[0].split('/')[7]
+            seqname = line[0].split('/')[8]
+            subfolder = line[0].split('/')[9]
+
+            line[1] = line[1].rstrip()
+            example = os.path.join(line[0], '{}.png'.format(line[1]))
+
+            image = cv2.imread(example).astype(np.float32)
+
+            examples_save_path = os.path.join(OUTPUT_DIR, 'kitti', model, date, seqname, subfolder)
+            test_images_save_path = os.path.join(OUTPUT_DIR, 'kitti', 'test-images', date, seqname, subfolder)
+            if not os.path.isdir(examples_save_path):
+                os.makedirs(examples_save_path)
+            if not os.path.isdir(test_images_save_path):
+                os.makedirs(test_images_save_path)
+            # save image per confronto
+            if not os.path.isfile(os.path.join(test_images_save_path, '{}.png'.format(line[1]))):
+                cv2.imwrite(os.path.join(test_images_save_path, '{}.png'.format(line[1])), image)
+
+            image = cv2.resize(image, (WIDTH, HEIGHT))
+            input_batch = np.reshape(image, (1, HEIGHT, WIDTH, 3))
+
+            depth_ax, depth = training_utils.infer(depth_motion_field_model.input_fn_infer(input_image=input_batch),
+                                         depth_motion_field_model.loss_fn,
+                                         depth_motion_field_model.get_vars_to_restore_fn)
+
+            # save depth .png
+            depth_ax.figure.savefig(os.path.join(examples_save_path, '{}_depth.png'.format(line[1])))
+            # save depth .npy
+            np.save(os.path.join(examples_save_path, '{}_depth.npy'.format(line[1])), depth)
 
 
 if __name__ == '__main__':
