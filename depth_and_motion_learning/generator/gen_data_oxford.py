@@ -17,16 +17,23 @@ import time
 
 
 SEQ_LENGTH = 3
-# WIDTH = 416
-WIDTH = 640
-# HEIGHT = 128
-HEIGHT = 192
-STEPSIZE = 1
-CROP_AREA = [0, 360, 1280, 730]
-# mask-rcnn score limit
-LIMIT = 90
-DIR = '/media/RAIDONE/radice/datasets/oxford'
 
+# WIDTH = 640
+# HEIGHT = 192
+
+# WIDTH = 416
+# HEIGHT = 128
+
+# cerco di mantenere le proporzioni simili alla dimensione di crop
+WIDTH = 416
+HEIGHT = 198
+STEPSIZE = 1
+# CROP_AREA = [0, 360, 1280, 730]
+CROP_AREA = [0, 200, 1280, 810]
+# mask-rcnn score limit
+LIMIT = 80
+DIR = '/media/RAIDONE/radice/datasets/oxford'
+STRUCT2DEPTH_FOLDER = 'struct2depth-80-1280x610'
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Data generator for depth-and-motion-learning')
@@ -35,38 +42,65 @@ def parse_args():
                         required=True)
     return parser.parse_args()
 
-
-def run_all(args):
-    folder = args.folder
-    path = os.path.join(DIR, folder)
-
-    # start processing
-    print('-> Processing', path)
-    save_path = os.path.join(DIR, folder, 'struct2depth_640x192')
-    print('-> Save path', save_path)
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
-    if not os.path.exists(os.path.join(save_path, 'left')):
-        os.mkdir(os.path.join(save_path, 'left'))
-    # if not os.path.exists(os.path.join(save_path, 'right')):
-    #     os.mkdir(os.path.join(save_path, 'right'))
-
-    # oxford calib matrix
+def get_camera_intrinsics_matrix():
+    # original dimensions
+    original_width = 1280
+    original_height = 960
+    # original oxford intrinsic matrix parameters
     fx = 983.044006
     fy = 983.044006
     cx = 643.646973
     cy = 493.378998
 
-    crop_height = CROP_AREA[3] - CROP_AREA[1]
-    crop_ci = CROP_AREA[3] - (crop_height / 2)
-    crop_cy  = cy + float(crop_height - 1) / 2 - crop_ci
+    # new cy after crop
+    # crop_height = CROP_AREA[3] - CROP_AREA[1]
+    # crop_ci = CROP_AREA[3] - (crop_height / 2)
+    # crop_cy = cy + float(crop_height - 1) / 2 - crop_ci
+    crop_cy = cy - CROP_AREA[1]
 
-    # calib_camera = np.array([[fx, 0.0, cx],
-    #                           [0.0, fy, crop_cy],
-    #                           [0.0, 0.0, 1.0]])
+    # scales
+    scale_x = WIDTH / original_width
+    scale_y = HEIGHT / original_height
 
-    # for subfolder in ['stereo/left', 'stereo/right']:
-    for subfolder in ['stereo/left']:
+    # new parameters after resize
+    current_fx = fx * scale_x
+    current_fy = fy * scale_y
+    current_cx = cx * scale_x
+    current_cy = crop_cy * scale_y
+
+    # intrinsics_matrix = np.array([[fx, 0.0, cx],
+    #                          [0.0, fy, cy],
+    #                          [0.0, 0.0, 1.0]])
+
+    intrinsics_matrix = np.array([[current_fx, 0.0, current_cx],
+                                  [0.0, current_fy, current_cy],
+                                  [0.0, 0.0, 1.0]])
+
+    return intrinsics_matrix
+
+
+def run_all(args):
+    folder = args.folder
+    path = os.path.join(DIR, folder)
+
+    print('Parameters:\n WIDTH={},\n HEIGTH={},\n CROP_AREA={},\n LIMIT={}'.format(WIDTH, HEIGHT, CROP_AREA, LIMIT))
+
+    # start processing
+    print('-> Processing sequence', folder)
+
+    struct2depth_path = os.path.join(DIR, folder, STRUCT2DEPTH_FOLDER)
+    if not os.path.exists(struct2depth_path):
+        os.makedirs(struct2depth_path)
+
+    if not os.path.exists(os.path.join(struct2depth_path, 'left')):
+        os.mkdir(os.path.join(struct2depth_path, 'left'))
+    if not os.path.exists(os.path.join(struct2depth_path, 'right')):
+        os.mkdir(os.path.join(struct2depth_path, 'right'))
+
+    intrinsics_matrix = get_camera_intrinsics_matrix()
+    calib_representation = ','.join([str(c) for c in intrinsics_matrix.flatten()])
+
+    for subfolder in ['stereo/left', 'stereo/right']:
 
         start_partial = timeit.default_timer()
         current_seg = start_partial
@@ -86,47 +120,26 @@ def run_all(args):
 
             for j in range(i-SEQ_LENGTH, i):  # Collect frames for this sample.
                 img = cv2.imread(files[j])
+                img = img[CROP_AREA[1]:CROP_AREA[3], :, :]
+
                 if subfolder == 'stereo/left':
-                    seg_path = os.path.join(path, 'rcnn-masks', 'left',
+                    seg_path = os.path.join(path, 'rcnn-masks-classes', 'left',
                                             os.path.basename(files[j]).replace('.png', '.npz'))
-                # else:
-                #     seg_path = os.path.join(path, 'masks', 'right',
-                #                             os.path.basename(files[j]).replace('.png', '.npz'))
+                else:
+                    seg_path = os.path.join(path, 'rcnn-masks-classes', 'right',
+                                            os.path.basename(files[j]).replace('.png', '.npz'))
 
                 l = np.load(seg_path, allow_pickle=True)
                 segdict = l['arr_0'].item()
+                segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1], 3])
+                # class_names = ['BG'=0, 'person'=1, 'bicycle'=2, 'car'=3, 'motorcycle'=4, 'bus'=6 'truck'=8]
+                index_array = np.where((segdict['score_mask'] >= LIMIT) &
+                                       ((segdict['class_ids'] == 1) | (segdict['class_ids'] == 2) |
+                                        (segdict['class_ids'] == 3) | (segdict['class_ids'] == 4) |
+                                        (segdict['class_ids'] == 6) | (segdict['class_ids'] == 8)))
+                for i in range(len(index_array[0])):
+                    segimg[index_array[0][i], index_array[1][i], :] = 255
 
-                # segimg = cv2.imread(seg_path)
-                segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1]])
-
-                for i in range(segdict['score_mask'].shape[0]):
-                    for j in range(segdict['score_mask'].shape[1]):
-                        if segdict['score_mask'][i, j] > LIMIT:
-                            segimg[i, j] = 255
-
-                ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
-
-                img = img[CROP_AREA[1]:CROP_AREA[3], :, :]
-
-                zoom_x = WIDTH / ORIGINAL_WIDTH
-                zoom_y = HEIGHT / ORIGINAL_HEIGHT
-
-                # Adjust intrinsics.
-                # calib_current = calib_camera.copy()
-                # calib_current[0, 0] *= zoom_x
-                # calib_current[0, 2] *= zoom_x
-                # calib_current[1, 1] *= zoom_y
-                # calib_current[1, 2] *= zoom_y
-
-                current_fx = fx * zoom_x
-                current_fy = fy * zoom_y
-                current_cx = cx * zoom_x
-                current_cy = crop_cy * zoom_y
-                calib_current = np.array([[current_fx, 0.0, current_cx],
-                                         [0.0, current_fy, current_cy],
-                                         [0.0, 0.0, 1.0]])
-
-                calib_representation = ','.join([str(c) for c in calib_current.flatten()])
                 img = cv2.resize(img, (WIDTH, HEIGHT))
                 segimg = cv2.resize(segimg, (WIDTH, HEIGHT))
                 big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
@@ -134,13 +147,13 @@ def run_all(args):
                 wct+=1
 
             if subfolder == 'stereo/left':
-                big_img_path = os.path.join(save_path, 'left', '{}.{}'.format(imgnum, 'png'))
-                txt_path = os.path.join(save_path, 'left', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
-                big_seg_img_path = os.path.join(save_path, 'left', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
-            # else:
-            #     big_img_path = os.path.join(save_path, 'right', '{}.{}'.format(imgnum, 'png'))
-            #     txt_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
-            #     big_seg_img_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
+                big_img_path = os.path.join(struct2depth_path, 'left', '{}.{}'.format(imgnum, 'png'))
+                txt_path = os.path.join(struct2depth_path, 'left', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
+                big_seg_img_path = os.path.join(struct2depth_path, 'left', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
+            else:
+                big_img_path = os.path.join(struct2depth_path, 'right', '{}.{}'.format(imgnum, 'png'))
+                txt_path = os.path.join(struct2depth_path, 'right', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
+                big_seg_img_path = os.path.join(struct2depth_path, 'right', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
 
             cv2.imwrite(big_img_path, big_img)
             cv2.imwrite(big_seg_img_path, big_seg_img)
