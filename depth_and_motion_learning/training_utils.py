@@ -48,8 +48,6 @@ import wandb
 
 FLAGS = flags.FLAGS
 
-wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True, name="prova")
-
 flags.DEFINE_string('master', '', 'TensorFlow session address.')
 
 flags.DEFINE_string('model_dir', '', 'Directory where the model is saved.')
@@ -284,6 +282,10 @@ def train(input_fn, loss_fn, get_vars_to_restore_fn=None):
       a `var_list` to indicate which variables to load from what names in the
       checnpoint.
   """
+
+  wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True,
+             name="kitti-1024x320-score80")
+
   params = ParameterContainer({
       'model': {
           'batch_size': 16,
@@ -380,13 +382,11 @@ def run_local_inference(losses_fn,
     print("\n\nPRE estimator.predict")
     pred = estimator.predict(input_fn=input_fn, predict_keys=None, hooks=[init_hook])
 
+    # (1, HEIGHT, WIDTH, 1)
     pred_array = np.array(list(pred))
-
-    print(pred_array.shape)
-
     depth = pred_array[0, :, :, :]
-    # depth = cv2.resize(depth, (416, 128))
-    depth = cv2.resize(depth, (640, 192))
+    depth = cv2.resize(depth, (416, 128))
+    #depth = cv2.resize(depth, (640, 192))
     # use matplotlib
     # plt.figure(figsize=(30,15))
     # plt.imshow(1 / depth[:, :], cmap='plasma')
@@ -412,7 +412,7 @@ def run_local_inference(losses_fn,
 
     print("\nOUT run_local_inference")
 
-    return depth_ax
+    return depth_ax, pred_array
 
 
 def infer(input_fn, loss_fn, get_vars_to_restore_fn=None):
@@ -459,7 +459,7 @@ def infer(input_fn, loss_fn, get_vars_to_restore_fn=None):
         'Starting training with the following parameters:\n%s',
         json.dumps(params.as_dict(), indent=2, sort_keys=True, default=str))
 
-    depth = run_local_inference(loss_fn, input_fn, params.trainer, params.model,
+    depth_ax, depth = run_local_inference(loss_fn, input_fn, params.trainer, params.model,
                                            vars_to_restore_fn)
 
-    return depth
+    return depth_ax, depth

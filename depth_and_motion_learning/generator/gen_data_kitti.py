@@ -15,25 +15,23 @@
 
 """ Offline data generation for the KITTI dataset."""
 
-import os
 from absl import app
-from absl import flags
-from absl import logging
 import numpy as np
 import cv2
 import os, glob
-
-import alignment
-from alignment import compute_overlap
-from alignment import align
-
+import timeit, time
 
 SEQ_LENGTH = 3
 WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
-INPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_FULL/kitti-raw-uncompressed'
-OUTPUT_DIR = '/usr/local/google/home/anelia/struct2depth/KITTI_procesed/'
+# mask-rcnn score limit
+LIMIT = 80
+INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
+OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-80-classes-416x128'
+
+if not OUTPUT_DIR.endswith('/'):
+    OUTPUT_DIR = OUTPUT_DIR + '/'
 
 
 def get_line(file, start):
@@ -52,97 +50,118 @@ def get_line(file, start):
     return ret
 
 
-def crop(img, segimg, fx, fy, cx, cy):
-    # Perform center cropping, preserving 50% vertically.
-    middle_perc = 0.50
-    left = 1-middle_perc
-    half = left/2
-    a = img[int(img.shape[0]*(half)):int(img.shape[0]*(1-half)), :]
-    aseg = segimg[int(segimg.shape[0]*(half)):int(segimg.shape[0]*(1-half)), :]
-    cy /= (1/middle_perc)
-
-    # Resize to match target height while preserving aspect ratio.
-    wdt = int((128*a.shape[1]/a.shape[0]))
-    x_scaling = float(wdt)/a.shape[1]
-    y_scaling = 128.0/a.shape[0]
-    b = cv2.resize(a, (wdt, 128))
-    bseg = cv2.resize(aseg, (wdt, 128))
-
-    # Adjust intrinsics.
-    fx*=x_scaling
-    fy*=y_scaling
-    cx*=x_scaling
-    cy*=y_scaling
-
-    # Perform center cropping horizontally.
-    remain = b.shape[1] - 416
-    cx /= (b.shape[1]/416)
-    c = b[:, int(remain/2):b.shape[1]-int(remain/2)]
-    cseg = bseg[:, int(remain/2):b.shape[1]-int(remain/2)]
-
-    return c, cseg, fx, fy, cx, cy
-
-
 def run_all():
-  ct = 0
-if not OUTPUT_DIR.endswith('/'):
-    OUTPUT_DIR = OUTPUT_DIR + '/'
+    partial_run_time = 0
 
-for d in glob.glob(INPUT_DIR + '/*/'):
-    date = d.split('/')[-2]
-    file_calibration = d + 'calib_cam_to_cam.txt'
-    calib_raw = [get_line(file_calibration, 'P_rect_02'), get_line(file_calibration, 'P_rect_03')]
+    for d in glob.glob(INPUT_DIR + '/data' + '/*/'):
 
-    for d2 in glob.glob(d + '*/'):
-        seqname = d2.split('/')[-2]
-        print('Processing sequence', seqname)
-        for subfolder in ['image_02/data', 'image_03/data']:
-            ct = 1
-            seqname = d2.split('/')[-2] + subfolder.replace('image', '').replace('/data', '')
-            if not os.path.exists(OUTPUT_DIR + seqname):
-                os.mkdir(OUTPUT_DIR + seqname)
+        date = d.split('/')[-2]
+        file_calibration = d + 'calib_cam_to_cam.txt'
+        calib_raw = [get_line(file_calibration, 'P_rect_02'), get_line(file_calibration, 'P_rect_03')]
 
-            calib_camera = calib_raw[0] if subfolder=='image_02/data' else calib_raw[1]
-            folder = d2 + subfolder
-            files = glob.glob(folder + '/*.png')
-            files = [file for file in files if not 'disp' in file and not 'flip' in file and not 'seg' in file]
-            files = sorted(files)
-            for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
-                imgnum = str(ct).zfill(10)
-                if os.path.exists(OUTPUT_DIR + seqname + '/' + imgnum + '.png'):
-                    ct+=1
-                    continue
-                big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
-                wct = 0
+        if not os.path.exists(os.path.join(OUTPUT_DIR, date)):
+            os.makedirs(os.path.join(OUTPUT_DIR, date))
 
-                for j in range(i-SEQ_LENGTH, i):  # Collect frames for this sample.
-                    img = cv2.imread(files[j])
-                    ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
+        for d2 in glob.glob(d + '*/'):
+            seqname = d2.split('/')[-2]
+            print('Processing sequence', seqname)
 
-                    zoom_x = WIDTH/ORIGINAL_WIDTH
-                    zoom_y = HEIGHT/ORIGINAL_HEIGHT
+            half_path = os.path.join(OUTPUT_DIR, date, seqname)
+            if not os.path.exists(half_path):
+                os.mkdir(half_path)
 
-                    # Adjust intrinsics.
-                    calib_current = calib_camera.copy()
-                    calib_current[0, 0] *= zoom_x
-                    calib_current[0, 2] *= zoom_x
-                    calib_current[1, 1] *= zoom_y
-                    calib_current[1, 2] *= zoom_y
+            start_seg = timeit.default_timer()
 
-                    calib_representation = ','.join([str(c) for c in calib_current.flatten()])
+            for subfolder in ['image_02/data', 'image_03/data']:
+                ct = 1
 
-                    img = cv2.resize(img, (WIDTH, HEIGHT))
-                    big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
-                    wct+=1
-                cv2.imwrite(OUTPUT_DIR + seqname + '/' + imgnum + '.png', big_img)
-                f = open(OUTPUT_DIR + seqname + '/' + imgnum + '_cam.txt', 'w')
-                f.write(calib_representation)
-                f.close()
-                ct+=1
+                full_path = os.path.join(half_path, subfolder.replace('/data', ''))
+                if not os.path.exists(full_path):
+                    os.mkdir(full_path)
+
+                calib_camera = calib_raw[0] if subfolder=='image_02/data' else calib_raw[1]
+                folder = d2 + subfolder
+                files = glob.glob(folder + '/*.png')
+                files = [file for file in files if not 'disp' in file and not 'flip' in file and not 'seg' in file]
+                files = sorted(files)
+                for i in range(SEQ_LENGTH, len(files)+1, STEPSIZE):
+                    imgnum = str(ct).zfill(10)
+                    # if (os.path.isfile(os.path.join(full_path, '{}.png'.format(imgnum)))) and \
+                    #         (os.path.isfile(os.path.join(full_path, '{}-fseg.png'.format(imgnum)))) and \
+                    #         (os.path.isfile(os.path.join(full_path, '{}_cam.txt'.format(imgnum)))):
+                    #     ct+=1
+                    #     continue
+
+                    big_img = np.zeros(shape=(HEIGHT, WIDTH*SEQ_LENGTH, 3))
+                    big_seg_img = np.zeros(shape=(HEIGHT, WIDTH * SEQ_LENGTH, 3))
+                    wct = 0
+
+                    for j in range(i-SEQ_LENGTH, i):  # Collect frames for this sample.
+                        img = cv2.imread(files[j])
+                        ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
+
+                        zoom_x = WIDTH/ORIGINAL_WIDTH
+                        zoom_y = HEIGHT/ORIGINAL_HEIGHT
+
+                        # Adjust intrinsics.
+                        calib_current = calib_camera.copy()
+                        calib_current[0, 0] *= zoom_x
+                        calib_current[0, 2] *= zoom_x
+                        calib_current[1, 1] *= zoom_y
+                        calib_current[1, 2] *= zoom_y
+
+                        calib_representation = ','.join([str(c) for c in calib_current.flatten()])
+
+                        # Load mask for current file
+                        seg_path = os.path.join(INPUT_DIR, 'mask-rcnn-classes', date, seqname, subfolder.replace('/data', ''),
+                                                os.path.basename(files[j]).replace('.png', '.npz'))
+                        l = np.load(seg_path, allow_pickle=True)
+                        segdict = l['arr_0'].item()
+                        segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1], 3])
+                        # class_names = ['BG'=0, 'person'=1, 'bicycle'=2, 'car'=3, 'motorcycle'=4, 'bus'=6 'truck'=8]
+                        index_array = np.where((segdict['score_mask']>=LIMIT) &
+                                               ((segdict['class_ids']==1) | (segdict['class_ids']==2) |
+                                                (segdict['class_ids']==3) | (segdict['class_ids']==4) |
+                                                (segdict['class_ids']==6) | (segdict['class_ids']==8)))
+                        for i in range(len(index_array[0])):
+                            segimg[index_array[0][i], index_array[1][i], :] = 255
+
+                        img = cv2.resize(img, (WIDTH, HEIGHT))
+                        big_img[:,wct*WIDTH:(wct+1)*WIDTH] = img
+
+                        segimg = cv2.resize(segimg, (WIDTH, HEIGHT))
+                        big_seg_img[:, wct * WIDTH:(wct + 1) * WIDTH] = segimg
+
+                        wct+=1
+
+                    cv2.imwrite(os.path.join(full_path, '{}.png'.format(imgnum)), big_img)
+                    cv2.imwrite(os.path.join(full_path, '{}-fseg.png'.format(imgnum)), big_seg_img)
+                    f = open(os.path.join(full_path, '{}_cam.txt'.format(imgnum)), 'w')
+                    f.write(calib_representation)
+                    f.close()
+
+                    ct += 1
+
+            stop_seg = timeit.default_timer()
+            seg_run_time = int(stop_seg - start_seg)
+            partial_run_time += seg_run_time
+            print('-> Segment run time:', time.strftime('%H:%M:%S', time.gmtime(seg_run_time)))
+            print('-> Partial run time:', time.strftime('%H:%M:%S', time.gmtime(partial_run_time)))
+
 
 def main(_):
-  run_all()
+    run_all()
 
 
 if __name__ == '__main__':
-  app.run(main)
+    # start timer
+    start = timeit.default_timer()
+
+    app.run(main)
+
+    # stop timer
+    stop = timeit.default_timer()
+
+    # total run time
+    total_run_time = int(stop - start)
+    print('-> Total run time:', time.strftime('%H:%M:%S', time.gmtime(total_run_time)))

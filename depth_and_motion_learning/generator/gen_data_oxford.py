@@ -23,6 +23,8 @@ WIDTH = 640
 HEIGHT = 192
 STEPSIZE = 1
 CROP_AREA = [0, 360, 1280, 730]
+# mask-rcnn score limit
+LIMIT = 90
 DIR = '/media/RAIDONE/radice/datasets/oxford'
 
 
@@ -37,24 +39,6 @@ def parse_args():
 def run_all(args):
     folder = args.folder
     path = os.path.join(DIR, folder)
-
-    # rename input files with leading zeros
-    # left_folder = os.path.join(input_path, 'processed/stereo/left')
-    # print('-> Left folder', left_folder)
-    # right_folder = os.path.join(input_path, 'processed/stereo/right')
-    # print('-> Right folder', right_folder)
-    #
-    # for file in os.listdir(left_folder):
-    #     num = file.split('.')[0]
-    #     num = num.zfill(10)
-    #     new_filename = num + '.jpg'
-    #     os.rename(os.path.join(left_folder, file), os.path.join(left_folder, new_filename))
-    #
-    # for file in os.listdir(right_folder):
-    #     num = file.split('.')[0]
-    #     num = num.zfill(10)
-    #     new_filename = num + '.jpg'
-    #     os.rename(os.path.join(right_folder, file), os.path.join(right_folder, new_filename))
 
     # start processing
     print('-> Processing', path)
@@ -104,12 +88,21 @@ def run_all(args):
                 img = cv2.imread(files[j])
                 if subfolder == 'stereo/left':
                     seg_path = os.path.join(path, 'rcnn-masks', 'left',
-                                            os.path.basename(files[j]).replace('.png', '-fseg.png'))
+                                            os.path.basename(files[j]).replace('.png', '.npz'))
                 # else:
                 #     seg_path = os.path.join(path, 'masks', 'right',
-                #                             os.path.basename(files[j]).replace('.png', '-fseg.png'))
+                #                             os.path.basename(files[j]).replace('.png', '.npz'))
 
-                segimg = cv2.imread(seg_path)
+                l = np.load(seg_path, allow_pickle=True)
+                segdict = l['arr_0'].item()
+
+                # segimg = cv2.imread(seg_path)
+                segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1]])
+
+                for i in range(segdict['score_mask'].shape[0]):
+                    for j in range(segdict['score_mask'].shape[1]):
+                        if segdict['score_mask'][i, j] > LIMIT:
+                            segimg[i, j] = 255
 
                 ORIGINAL_HEIGHT, ORIGINAL_WIDTH, _ = img.shape
 
@@ -144,10 +137,10 @@ def run_all(args):
                 big_img_path = os.path.join(save_path, 'left', '{}.{}'.format(imgnum, 'png'))
                 txt_path = os.path.join(save_path, 'left', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
                 big_seg_img_path = os.path.join(save_path, 'left', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
-            else:
-                big_img_path = os.path.join(save_path, 'right', '{}.{}'.format(imgnum, 'png'))
-                txt_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
-                big_seg_img_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
+            # else:
+            #     big_img_path = os.path.join(save_path, 'right', '{}.{}'.format(imgnum, 'png'))
+            #     txt_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '_cam', 'txt'))
+            #     big_seg_img_path = os.path.join(save_path, 'right', '{}{}.{}'.format(imgnum, '-fseg', 'png'))
 
             cv2.imwrite(big_img_path, big_img)
             cv2.imwrite(big_seg_img_path, big_seg_img)
