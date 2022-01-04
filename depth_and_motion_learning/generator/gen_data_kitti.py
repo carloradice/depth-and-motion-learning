@@ -22,13 +22,13 @@ import os, glob
 import timeit, time
 
 SEQ_LENGTH = 3
-WIDTH = 640
-HEIGHT = 192
+WIDTH = 416
+HEIGHT = 128
 STEPSIZE = 1
 # mask-rcnn score limit
-LIMIT = 90
+LIMIT = 80
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
-OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth'
+OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-80-classes-416x128'
 
 if not OUTPUT_DIR.endswith('/'):
     OUTPUT_DIR = OUTPUT_DIR + '/'
@@ -113,12 +113,16 @@ def run_all():
                         calib_representation = ','.join([str(c) for c in calib_current.flatten()])
 
                         # Load mask for current file
-                        seg_path = os.path.join(INPUT_DIR, 'mask-rcnn', date, seqname, subfolder.replace('/data', ''),
+                        seg_path = os.path.join(INPUT_DIR, 'mask-rcnn-classes', date, seqname, subfolder.replace('/data', ''),
                                                 os.path.basename(files[j]).replace('.png', '.npz'))
                         l = np.load(seg_path, allow_pickle=True)
                         segdict = l['arr_0'].item()
                         segimg = np.zeros([segdict['score_mask'].shape[0], segdict['score_mask'].shape[1], 3])
-                        index_array = np.where(segdict['score_mask']>=LIMIT)
+                        # class_names = ['BG'=0, 'person'=1, 'bicycle'=2, 'car'=3, 'motorcycle'=4, 'bus'=6 'truck'=8]
+                        index_array = np.where((segdict['score_mask']>=LIMIT) &
+                                               ((segdict['class_ids']==1) | (segdict['class_ids']==2) |
+                                                (segdict['class_ids']==3) | (segdict['class_ids']==4) |
+                                                (segdict['class_ids']==6) | (segdict['class_ids']==8)))
                         for i in range(len(index_array[0])):
                             segimg[index_array[0][i], index_array[1][i], :] = 255
 
@@ -146,7 +150,6 @@ def run_all():
 
 
 def main(_):
-    #run_all()
     run_all()
 
 

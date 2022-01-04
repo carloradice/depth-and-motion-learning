@@ -284,7 +284,7 @@ def train(input_fn, loss_fn, get_vars_to_restore_fn=None):
   """
 
   wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True,
-             name="kitti-640x192-score90")
+             name="kitti-1024x320-score80")
 
   params = ParameterContainer({
       'model': {

@@ -16,17 +16,28 @@
 set -e
 set -x
 
+# Kitti train file is: "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/kitti/eigen_train_files.txt"
+# Convenzione nome:
+# kitti-nome_modello
+# Oxford train files are in: "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/"
+# Convenzione nome:
+# oxford-nome_modello
+
 python -m depth_and_motion_learning.depth_motion_field_train \
-  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/2014-05-06-12-54-54_rcnn-mask-90 \
+  --model_dir=/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/kitti-1024x320-score80 \
   --param_overrides='{
     "model": {
       "input": {
-        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/oxford/2014-05-06-12-54-54/train.txt"
+        "data_path": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/kitti/eigen_train_files.txt"
       }
     },
     "trainer": {
       "init_ckpt": "/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/models/resnet18/model.ckpt",
       "init_ckpt_type": "imagenet",
-      "max_steps": 100000
+      "max_steps": 200000
+    },
+    "image_preprocessing": {
+      "image_height": 320,
+      "image_width": 1024
     }
   }'
