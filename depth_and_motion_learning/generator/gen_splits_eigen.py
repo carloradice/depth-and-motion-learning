@@ -1,11 +1,20 @@
 import os
 import random
+import argparse
 
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/'
 OUTPUT_DIR = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning/splits/kitti/'
 
 
-def fill_data(lines, type):
+def parse_args():
+    parser = argparse.ArgumentParser(description='Splits generator for kitti')
+    parser.add_argument('--folder', type=str,
+                        help='folder containing files',
+                        required=True)
+    return parser.parse_args()
+
+
+def fill_data(lines, type, folder):
     data = []
     for line in lines:
         path = line.rstrip().split()[0]
@@ -18,10 +27,10 @@ def fill_data(lines, type):
 
         # Se esiste il file, aggiungerlo allo split
         if type == 'train':
-            f = os.path.join(INPUT_DIR, 'struct2depth', date, sequence, 'image_02', '{}.png'.format(basename))
+            f = os.path.join(INPUT_DIR, folder, date, sequence, 'image_02', '{}.png'.format(basename))
             if os.path.isfile(f):
-                l = os.path.join(INPUT_DIR, 'struct2depth', date, sequence, 'image_02') + ' ' + '{}{}'.format(basename, '\n')
-                r = os.path.join(INPUT_DIR, 'struct2depth', date, sequence, 'image_03') + ' ' + '{}{}'.format(basename, '\n')
+                l = os.path.join(INPUT_DIR, folder, date, sequence, 'image_02') + ' ' + '{}{}'.format(basename, '\n')
+                r = os.path.join(INPUT_DIR, folder, date, sequence, 'image_03') + ' ' + '{}{}'.format(basename, '\n')
                 data.append(l)
                 data.append(r)
 
@@ -36,20 +45,25 @@ def fill_data(lines, type):
 
 
 def gen_splits():
+
+    args = parse_args()
+    folder = args.folder
+    sub = folder.split('-', 1)[1:][0]
+
     # Train
     file = open(INPUT_DIR + 'eigen_train_files.txt', 'r')
     lines = file.readlines()
-    train = fill_data(lines=lines, type='train')
+    train = fill_data(lines=lines, type='train', folder=folder)
     random.shuffle(train)
-    file = open(OUTPUT_DIR + 'eigen_train_files.txt', 'w')
+    file = open(OUTPUT_DIR + 'eigen_train_files_' + sub + '.txt', 'w')
     file.writelines(train)
 
     # Test
     file = open(INPUT_DIR + 'eigen_test_files.txt', 'r')
     lines = file.readlines()
-    test = fill_data(lines=lines, type='test')
+    test = fill_data(lines=lines, type='test', folder=folder)
     random.shuffle(test)
-    file = open(OUTPUT_DIR + 'eigen_test_files.txt', 'w')
+    file = open(OUTPUT_DIR + 'eigen_test_files_' + sub + '.txt', 'w')
     file.writelines(test)
 
 
