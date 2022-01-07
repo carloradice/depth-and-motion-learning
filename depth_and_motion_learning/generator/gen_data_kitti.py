@@ -20,15 +20,16 @@ import numpy as np
 import cv2
 import os, glob
 import timeit, time
+from datetime import datetime
 
 SEQ_LENGTH = 3
 WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
 # mask-rcnn score limit
-LIMIT = 80
+LIMIT = 85
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
-OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-80-classes-416x128'
+OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-85-classes-416x128'
 
 if not OUTPUT_DIR.endswith('/'):
     OUTPUT_DIR = OUTPUT_DIR + '/'
@@ -51,6 +52,8 @@ def get_line(file, start):
 
 
 def run_all():
+    print('-> Parameters:\n WIDTH={},\n HEIGTH={},\n LIMIT={}'.format(WIDTH, HEIGHT, LIMIT))
+
     partial_run_time = 0
 
     for d in glob.glob(INPUT_DIR + '/data' + '/*/'):
@@ -154,10 +157,22 @@ def main(_):
 
 
 if __name__ == '__main__':
+    # datetime object containing current date and time
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print("-> Start:", dt_string)
+
     # start timer
     start = timeit.default_timer()
 
     app.run(main)
+
+    # datetime object containing current date and time
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print("-> End:", dt_string)
 
     # stop timer
     stop = timeit.default_timer()

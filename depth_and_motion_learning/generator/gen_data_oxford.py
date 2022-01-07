@@ -1,11 +1,7 @@
 
 """ Offline data generation for the OXFORD dataset."""
 
-
-import os
 from absl import app
-from absl import flags
-from absl import logging
 import numpy as np
 import cv2
 import os, glob
@@ -14,7 +10,7 @@ import argparse
 import timeit
 # time format
 import time
-
+from datetime import datetime
 
 SEQ_LENGTH = 3
 
@@ -33,7 +29,7 @@ CROP_AREA = [0, 200, 1280, 810]
 # mask-rcnn score limit
 LIMIT = 80
 DIR = '/media/RAIDONE/radice/datasets/oxford'
-STRUCT2DEPTH_FOLDER = 'struct2depth-80-1280x610'
+STRUCT2DEPTH_FOLDER = 'struct2depth-80-416x198'
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Data generator for depth-and-motion-learning')
@@ -83,12 +79,13 @@ def run_all(args):
     folder = args.folder
     path = os.path.join(DIR, folder)
 
-    print('Parameters:\n WIDTH={},\n HEIGTH={},\n CROP_AREA={},\n LIMIT={}'.format(WIDTH, HEIGHT, CROP_AREA, LIMIT))
+    print('-> Parameters:\n WIDTH={},\n HEIGTH={},\n CROP_AREA={},\n LIMIT={}'.format(WIDTH, HEIGHT, CROP_AREA, LIMIT))
 
     # start processing
     print('-> Processing sequence', folder)
 
     struct2depth_path = os.path.join(DIR, folder, STRUCT2DEPTH_FOLDER)
+
     if not os.path.exists(struct2depth_path):
         os.makedirs(struct2depth_path)
 
@@ -182,11 +179,23 @@ def main(args):
 
 
 if __name__ == '__main__':
+    # datetime object containing current date and time
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print("-> Start:", dt_string)
+
     # start timer
     start = timeit.default_timer()
 
     args = parse_args()
     app.run(main(args))
+
+    # datetime object containing current date and time
+    now = datetime.now()
+    # dd/mm/YY H:M:S
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print("-> End:", dt_string)
 
     # stop timer
     stop = timeit.default_timer()
@@ -194,3 +203,4 @@ if __name__ == '__main__':
     # total run time
     total_run_time = int(stop - start)
     print('-> Total run time:', time.strftime('%H:%M:%S', time.gmtime(total_run_time)))
+
