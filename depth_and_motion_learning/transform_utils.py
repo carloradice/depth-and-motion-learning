@@ -174,7 +174,24 @@ def combine(rot_mat1, trans_vec1, rot_mat2, trans_vec2):
   https://github.com/google-research/google-research/issues/162
   State that this should solve the bug with NaN during training on GPU
   """
+  # r2r1 = tf.matmul(rot_mat2, rot_mat1)
+  # r2t1 = tf.matmul(rot_mat2, tf.expand_dims(trans_vec1, -1))
+  # r2t1 = tf.squeeze(r2t1, axis=-1)
+  # return r2r1, r2t1 + trans_vec2
+
+  """
+  Sempre da https://github.com/google-research/google-research/issues/162
+  Provo questo metodo
+  """
+  rot_mat1 = tf.cast(rot_mat1, tf.float64)
+  trans_vec1 = tf.cast(trans_vec1, tf.float64)
+  rot_mat2 = tf.cast(rot_mat2, tf.float64)
+
   r2r1 = tf.matmul(rot_mat2, rot_mat1)
   r2t1 = tf.matmul(rot_mat2, tf.expand_dims(trans_vec1, -1))
   r2t1 = tf.squeeze(r2t1, axis=-1)
+
+  r2r1 = tf.cast(r2r1, tf.float32)
+  r2t1 = tf.cast(r2t1, tf.float32)
+
   return r2r1, r2t1 + trans_vec2
