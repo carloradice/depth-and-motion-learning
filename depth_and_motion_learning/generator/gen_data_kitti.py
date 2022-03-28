@@ -27,9 +27,9 @@ WIDTH = 416
 HEIGHT = 128
 STEPSIZE = 1
 # mask-rcnn score limit
-LIMIT = 85
+LIMIT = 80
 INPUT_DIR = '/media/RAIDONE/radice/datasets/kitti'
-OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-85-classes-416x128'
+OUTPUT_DIR = '/media/RAIDONE/radice/datasets/kitti/struct2depth-80-classes-640x192'
 
 if not OUTPUT_DIR.endswith('/'):
     OUTPUT_DIR = OUTPUT_DIR + '/'

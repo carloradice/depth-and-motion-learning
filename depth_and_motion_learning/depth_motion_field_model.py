@@ -32,7 +32,6 @@ from depth_and_motion_learning.dataset import data_processing
 from depth_and_motion_learning.dataset import reader_cityscapes
 from depth_and_motion_learning.losses import loss_aggregator
 
-import cv2
 
 DEFAULT_PARAMS = {
     'batch_size': None,
@@ -53,7 +52,8 @@ DEFAULT_PARAMS = {
         'prefetch_size': 32,
 
         # Allows arbitrary parameters to be passed to the reader.
-        'reader': {},
+        # 'reader': {},
+        'reader': '',
     },
     'image_preprocessing': {
         'data_augmentation': True,
@@ -311,8 +311,9 @@ def input_fn(params):
 
   params = parameter_container.ParameterContainer.from_defaults_and_overrides(
       DEFAULT_PARAMS, params, is_strict=True, strictness_depth=2)
+
   dataset = reader_cityscapes.read_frame_pairs_from_data_path(
-      params.input.data_path, params.input.reader)
+  params.input.data_path, params.input.reader)
 
   if params.learn_intrinsics.enabled and params.learn_intrinsics.per_video:
     intrinsics_ht = intrinsics_utils.HashTableIndexer(

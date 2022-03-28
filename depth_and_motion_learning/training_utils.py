@@ -283,9 +283,6 @@ def train(input_fn, loss_fn, get_vars_to_restore_fn=None):
       checnpoint.
   """
 
-  wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True,
-             name="kitti-1024x320-score80")
-
   params = ParameterContainer({
       'model': {
           'batch_size': 16,
@@ -297,6 +294,16 @@ def train(input_fn, loss_fn, get_vars_to_restore_fn=None):
   }})
 
   params.override(FLAGS.param_overrides)
+
+  # WandB
+  dir = '/media/RAIDONE/radice/neural-networks-data/depth-and-motion-learning'
+  id = wandb.util.generate_id()
+  wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True,
+             name="oxford-mono-416x128-{}".format(id), id=id, dir=dir)
+
+  # For when it is needed to resume
+  # wandb.init(project="depth-and-motion-learning", entity="carloradice", config=FLAGS, sync_tensorboard=True,
+  #            name="kitti-80-classes-416x128-after-matrix-fix", id=id, resume="must")
 
   init_ckpt_type = params.trainer.get('init_ckpt_type')
 
